@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đặt vé thành công</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #2dc275;
+            padding: 20px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .ticket-info {
+            background-color: #f0f8f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .ticket-info h3 {
+            margin-top: 0;
+            color: #2dc275;
+        }
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .ticket-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: 600;
+            color: #555;
+        }
+        .value {
+            text-align: right;
+            color: #333;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .qr-code {
+            border: 10px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .footer {
+            background-color: #f0f8f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            background-color: #2dc275;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .note {
+            font-size: 13px;
+            color: #777;
+            font-style: italic;
+            margin-top: 15px;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2dc275;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100%;
+                border-radius: 0;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Đặt vé thành công!</h1>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong>{{ booking.name }}</strong>,</p>
+            
+            <p>Cảm ơn bạn đã đặt vé sự kiện <strong>{{ event.title }}</strong>. Dưới đây là chi tiết đặt vé của bạn:</p>
+            
+            <div class="ticket-info">
+                <h3>Thông tin vé</h3>
+                
+                <div class="ticket-row">
+                    <span class="label">Mã đơn hàng:</span>
+                    <span class="value">{{ booking.order_id }}</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Ngày đặt vé:</span>
+                    <span class="value">{{ booking.booking_date|date:"H:i, d/m/Y" }}</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Loại vé:</span>
+                    <span class="value">{{ booking.ticket_type.name }}</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Số lượng:</span>
+                    <span class="value">{{ booking.quantity }} vé</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Trạng thái:</span>
+                    <span class="value" style="color: #28a745">Đã thanh toán</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Tổng tiền:</span>
+                    <span class="value total">{{ booking.total_price|floatformat:0 }} đ</span>
+                </div>
+            </div>
+            
+            <div class="ticket-info">
+                <h3>Thông tin sự kiện</h3>
+                
+                <div class="ticket-row">
+                    <span class="label">Sự kiện:</span>
+                    <span class="value">{{ event.title }}</span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Thời gian:</span>
+                    <span class="value">
+                        {% if session.start_time.date == session.end_time.date %}
+                            {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"d/m/Y" }}
+                        {% else %}
+                            {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="ticket-row">
+                    <span class="label">Địa điểm:</span>
+                    <span class="value">{{ event.location }}</span>
+                </div>
+            </div>
+            
+            <div class="qr-container">
+                <h3>Mã QR vé của bạn</h3>
+                <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ booking.order_id }}" alt="QR code vé" width="200" height="200">
+                <p class="note">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
+            </div>
+            
+            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email support@myticket.com hoặc số điện thoại 1900 1234.</p>
+            
+            <p>Chúc bạn có trải nghiệm tuyệt vời!</p>
+            
+            <p>Trân trọng,<br>
+            MyTicket Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 MyTicket. Tất cả quyền được bảo lưu.<br>
+            123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+        </div>
+    </div>
+</body>
+</html>

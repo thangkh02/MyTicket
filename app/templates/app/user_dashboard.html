@@ -1,0 +1,178 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Trang cá nhân - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Dashboard của {{ user.get_full_name|default:user.username }}</h2>
+    
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Tổng vé đã mua</h6>
+                            <h2 class="display-5 mb-0">{{ total_tickets }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-ticket-perforated"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Tổng chi tiêu</h6>
+                            <h2 class="display-5 mb-0">{{ total_spent|floatformat:0|intcomma }}đ</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Sự kiện đã tham gia</h6>
+                            <h2 class="display-5 mb-0">{{ past_events }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sự kiện sắp tới -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h5 class="mb-0">Sự kiện sắp tới</h5>
+                    <a href="{% url 'booking:my_tickets' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Sự kiện</th>
+                                        <th>Thời gian</th>
+                                        <th>Địa điểm</th>
+                                        <th>Loại vé</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in upcoming_bookings %}
+                                    <tr>
+                                        <td>{{ booking.event.title }}</td>
+                                        <td>{{ booking.session.start_time|date:"H:i, d/m/Y" }}</td>
+                                        <td>{{ booking.event.location }}</td>
+                                        <td>{{ booking.ticket_type.name }} ({{ booking.quantity }} vé)</td>
+                                        <td>
+                                            <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i> Xem vé
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted my-3 text-center">Bạn không có sự kiện sắp tới nào.</p>
+                        <div class="text-center">
+                            <a href="{% url 'home' %}" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Khám phá sự kiện
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sự kiện đề xuất -->
+    {% if recommended_events %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Đề xuất cho bạn</h4>
+            <div class="row">
+                {% for event in recommended_events %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if event.image %}
+                        <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light p-4 text-center" style="height: 180px;">
+                            <i class="bi bi-calendar-event" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            <p class="card-text text-muted mb-1">
+                                <i class="bi bi-geo-alt"></i> {{ event.location }}
+                            </p>
+                            <p class="card-text text-muted mb-2">
+                                <i class="bi bi-calendar"></i> {{ event.earliest_date|date:"d/m/Y" }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    <span class="badge bg-primary">{{ event.get_category_display }}</span>
+                                    {% if event.lowest_price %}
+                                    <span class="text-success fw-bold">{{ event.lowest_price|floatformat:0|intcomma }}đ</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Liên kết hữu ích -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-ticket-perforated text-primary me-2"></i>Quản lý vé</h5>
+                    <p class="card-text">Xem tất cả các vé đã mua, lịch sử đặt vé và quản lý đơn hàng của bạn.</p>
+                    <a href="{% url 'booking:my_tickets' %}" class="btn btn-primary">Xem vé của tôi</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-person-circle text-primary me-2"></i>Thông tin cá nhân</h5>
+                    <p class="card-text">Cập nhật thông tin cá nhân, đổi mật khẩu và quản lý tài khoản của bạn.</p>
+                    <a href="{% url 'profile' %}" class="btn btn-primary">Cập nhật hồ sơ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

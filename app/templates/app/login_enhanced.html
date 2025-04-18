@@ -1,0 +1,1013 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đăng Nhập - MyTicket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        :root {
+            --primary-color: #2DC275;
+            --secondary-color: #2DC275;
+            --success-color: #4CAF50;
+            --danger-color: #F44336;
+            --grey-light: #f9f9f9;
+            --grey-medium: #e0e0e0;
+            --dark-color: #333;
+            --light-color: #ffffff;
+            --light-blue: rgba(62, 126, 255, 0.1);
+            --shadow-color: rgba(62, 126, 255, 0.25);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        body, html {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .page-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .img-side {
+            background: linear-gradient(135deg, #2DC275, #30bc73);
+            background-size: cover;
+            background-position: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .img-side::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="white" opacity="0.05"><circle cx="20" cy="20" r="15"/><circle cx="70" cy="70" r="15"/><circle cx="50" cy="10" r="8"/><circle cx="90" cy="40" r="10"/><circle cx="10" cy="90" r="12"/><circle cx="40" cy="50" r="8"/></svg>');
+            background-size: 300px 300px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        
+        .img-side-content {
+            max-width: 600px;
+            text-align: center;
+            z-index: 2;
+        }
+        
+        .img-side h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .img-side p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .form-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            background-color: white;
+        }
+        
+        .form-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            position: relative;
+            background-color: white;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #777;
+            position: relative;
+            transition: all 0.3s;
+            margin-right: 20px;
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+        }
+        
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .form-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px 15px 15px 50px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background-color: var(--grey-light);
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--light-blue);
+            background-color: white;
+        }
+        
+        .input-group .icon-container {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+        
+        .input-group .icon-container i {
+            font-size: 20px;
+            color: #666;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        
+        .input-group:focus-within .icon-container i {
+            color: var(--primary-color);
+            opacity: 1;
+        }
+        
+        .social-login {
+            margin: 35px 0;
+            text-align: center;
+        }
+        
+        .social-login p {
+            position: relative;
+            margin-bottom: 25px;
+            color: #777;
+        }
+        
+        .social-login p:before,
+        .social-login p:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: calc(50% - 70px);
+            height: 1px;
+            background-color: #ddd;
+        }
+        
+        .social-login p:before {
+            left: 0;
+        }
+        
+        .social-login p:after {
+            right: 0;
+        }
+        
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+        }
+        
+        .social-icons a {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--grey-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 20px;
+            transition: all 0.3s;
+            border: 1px solid #eee;
+        }
+        
+        .social-icons a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+            background-color: var(--light-blue);
+        }
+        
+        .social-icons .google:hover {
+            background-color: #DB4437;
+            color: white;
+            border-color: #DB4437;
+        }
+        
+        .social-icons .facebook:hover {
+            background-color: #4267B2;
+            color: white;
+            border-color: #4267B2;
+        }
+        
+        .social-icons .linkedin:hover {
+            background-color: #0077B5;
+            color: white;
+            border-color: #0077B5;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            box-shadow: 0 5px 15px var (--shadow-color);
+        }
+        
+        button[type="submit"]:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .home-link a {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+            background-color: #2DC275;
+            padding: 10px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(45, 194, 117, 0.3);
+        }
+        
+        .home-link a:hover {
+            background-color: #25a561;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 194, 117, 0.4);
+        }
+        
+        .home-link i {
+            margin-right: 8px;
+            color: white;
+        }
+
+        /* Message Styling */
+        .message-container {
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            min-height: 30px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .message {
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s;
+            font-size: 14px;
+        }
+        
+        .message i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .message.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border-left: 4px solid #F44336;
+            color: #d32f2f;
+        }
+        
+        .message.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+            color: #388e3c;
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            z-index: 5;
+            transition: all 0.2s;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary-color);
+            background-color: var(--light-blue);
+        }
+        
+        .password-toggle i {
+            font-size: 16px;
+        }
+        
+        /* Error Tooltip */
+        .error-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 5px;
+            background-color: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10;
+            display: none;
+            animation: fadeIn 0.2s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .error-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 15px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(244, 67, 54, 0.9) transparent transparent transparent;
+        }
+        
+        .input-error {
+            border-color: #F44336 !important;
+            background-color: #FFEBEE !important;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Form Options */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            accent-color: var(--primary-color);
+        }
+        
+        .remember-me label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+        
+        .forgot-link {
+            font-size: 14px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .form-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* CAPTCHA Styling */
+        .captcha-container {
+            margin: 20px 0;
+        }
+        
+        .captcha-container iframe {
+            width: 100%;
+            border: 0;
+        }
+        
+        .captcha-container div {
+            margin: 0 auto;
+        }
+        
+        /* Mobile Styling */
+        @media (max-width: 992px) {
+            .page-container {
+                flex-direction: column;
+            }
+            
+            .img-side {
+                display: none;
+            }
+            
+            .form-side {
+                padding: 30px 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="home-link">
+            <a href="{% url 'home' %}">
+                <i class="bi bi-arrow-left"></i>Trang chủ
+            </a>
+        </div>
+        
+        <div class="img-side">
+            <div class="img-side-content">
+                <h1>MyTicket</h1>
+                <p>Trải nghiệm dịch vụ đặt vé trực tuyến đơn giản và tiện lợi. Tham gia cùng hàng ngàn người dùng để không bỏ lỡ bất kỳ sự kiện nào!</p>
+            </div>
+        </div>
+        
+        <div class="form-side">
+            <div class="form-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="login">Đăng nhập</div>
+                    <div class="tab" data-tab="register">Đăng ký</div>
+                </div>
+                
+                <!-- Tab đăng nhập -->
+                <div class="tab-content active" id="login-tab">
+                    <h2 class="form-title" , style="color :#2DC275">Đăng nhập</h2>
+                    <p class="form-subtitle">Vui lòng đăng nhập để tiếp tục</p>
+                    
+                    <div id="loginMessages" class="message-container">
+                        {% if messages and 'login' in request.path %}
+                            {% for message in messages %}
+                                <div class="message {{ message.tags }}">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" action="{% url 'login' %}" id="loginForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <input type="text" name="username" id="{{ form.username.id_for_label }}" 
+                                   placeholder="Tên đăng nhập" aria-label="Tên đăng nhập"
+                                   value="{{ username_value|default:'' }}" />
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-lock"></i>
+                            </div>
+                            <input type="password" name="password" id="{{ form.password.id_for_label }}" 
+                                   placeholder="Mật khẩu" aria-label="Mật khẩu" />
+                            <span class="password-toggle" onclick="togglePasswordVisibility(this)">
+                                <i class="bi bi-eye-slash"></i>
+                            </span>
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <div class="form-options">
+                            <div class="remember-me">
+                                <input type="checkbox" name="remember_me" id="remember_me">
+                                <label for="remember_me">Ghi nhớ đăng nhập</label>
+                            </div>
+                            <a href="#" class="forgot-link">Quên mật khẩu?</a>
+                        </div>
+                        
+                        <!-- CAPTCHA field -->
+                        <div class="captcha-container">
+                            {{ form.captcha }}
+                        </div>
+                        
+                        <button type="submit">Đăng nhập</button>
+                    </form>
+                    
+                    <div class="social-login">
+                        <p>Hoặc đăng nhập với</p>
+                        <div class="social-icons">
+                            <a href="#" class="google"><i class="bi bi-google"></i></a>
+                            <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                            <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <p>Chưa có tài khoản? <a href="#" class="switch-tab" data-tab="register">Đăng ký ngay</a></p>
+                    </div>
+                </div>
+                
+                <!-- Tab đăng ký -->
+                <div class="tab-content" id="register-tab">
+                    <h2 class="form-title" style="color : #2DC275">Đăng ký</h2>
+                    <p class="form-subtitle">Tạo tài khoản mới chỉ trong vài phút</p>
+                    
+                    <div id="registerMessages" class="message-container" style="display: block;">
+                        {% if messages and 'register' in request.path %}
+                            {% for message in messages %}
+                                <div class="message {{ message.tags }}">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" action="{% url 'register' %}" id="registerForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <input type="text" name="username" id="register-username" 
+                                   placeholder="Tên đăng nhập" 
+                                   value="{{ username_value|default:'' }}" />
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-envelope"></i>
+                            </div>
+                            <input type="email" name="email" id="register-email" 
+                                   placeholder="Email" 
+                                   value="{{ email_value|default:'' }}" />
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-lock"></i>
+                            </div>
+                            <input type="password" name="password1" id="register-password1" 
+                                   placeholder="Mật khẩu" />
+                            <span class="password-toggle" onclick="togglePasswordVisibility(this)">
+                                <i class="bi bi-eye-slash"></i>
+                            </span>
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="icon-container">
+                                <i class="bi bi-lock-fill"></i>
+                            </div>
+                            <input type="password" name="password2" id="register-password2" 
+                                   placeholder="Xác nhận mật khẩu" />
+                            <span class="password-toggle" onclick="togglePasswordVisibility(this)">
+                                <i class="bi bi-eye-slash"></i>
+                            </span>
+                            <div class="error-tooltip"></div>
+                        </div>
+                        
+                        <!-- CAPTCHA field -->
+                        <div class="captcha-container">
+                            {{ form.captcha }}
+                        </div>
+                        
+                        <button type="submit">Đăng ký</button>
+                    </form>
+                    
+                    <div class="social-login">
+                        <p>Hoặc đăng ký với</p>
+                        <div class="social-icons">
+                            <a href="#" class="google"><i class="bi bi-google"></i></a>
+                            <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                            <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <p>Đã có tài khoản? <a href="#" class="switch-tab" data-tab="login">Đăng nhập</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const switchTabLinks = document.querySelectorAll('.switch-tab');
+            
+            // Form validation functions
+            function showInputError(input, message) {
+                input.classList.add('input-error');
+                const tooltip = input.nextElementSibling.classList.contains('password-toggle') ? 
+                                input.nextElementSibling.nextElementSibling : 
+                                input.nextElementSibling;
+                tooltip.textContent = message;
+                tooltip.style.display = 'block';
+                setTimeout(() => {
+                    tooltip.style.display = 'none';
+                    input.classList.remove('input-error');
+                }, 3000);
+            }
+            
+            function showFormMessage(message, type, container) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                messageDiv.innerHTML = `<i class="bi bi-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>${message}`;
+                container.innerHTML = '';
+                container.appendChild(messageDiv);
+                container.style.display = 'flex'; // Changed from 'block' to 'flex' for better visibility
+                
+                // Remove automatic timeout for auth errors so users can see the message
+                if (!message.includes('Tên đăng nhập hoặc mật khẩu không chính xác')) {
+                    setTimeout(function() {
+                        messageDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            container.innerHTML = '';
+                        }, 500);
+                    }, 5000);
+                }
+            }
+            
+            function resetFormErrors() {
+                const inputs = document.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.classList.remove('input-error');
+                });
+                
+                const tooltips = document.querySelectorAll('.error-tooltip');
+                tooltips.forEach(tooltip => {
+                    tooltip.style.display = 'none';
+                });
+            }
+            
+            // Login form AJAX submission
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    const username = document.getElementById('{{ form.username.id_for_label }}');
+                    const password = document.getElementById('{{ form.password.id_for_label }}');
+                    const messageContainer = document.getElementById('loginMessages');
+                    
+                    resetFormErrors();
+                    let hasErrors = false;
+                    
+                    if (!username.value.trim()) {
+                        showInputError(username, 'Vui lòng nhập tên đăng nhập');
+                        hasErrors = true;
+                    }
+                    
+                    if (!password.value) {
+                        showInputError(password, 'Vui lòng nhập mật khẩu');
+                        hasErrors = true;
+                    }
+                    
+                    if (hasErrors) {
+                        showFormMessage('Vui lòng điền đầy đủ thông tin đăng nhập', 'error', messageContainer);
+                        e.preventDefault();
+                        return;
+                    }
+                    
+                    // Prevent default form submission
+                    e.preventDefault();
+                    
+                    // Get reCAPTCHA response
+                    let recaptchaResponse = '';
+                    if (typeof grecaptcha !== 'undefined') {
+                        recaptchaResponse = grecaptcha.getResponse();
+                    }
+                    
+                    // Prepare form data
+                    const formData = new FormData(loginForm);
+                    
+                    // Send AJAX request
+                    fetch('{% url "login" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect on success
+                            window.location.href = data.redirect_url || '{% url "home" %}';
+                        } else {
+                            // Display error messages
+                            messageContainer.innerHTML = '';
+                            
+                            if (data.captcha_error) {
+                                showFormMessage('Bạn cần hoàn thành kiểm tra CAPTCHA để tiếp tục.', 'error', messageContainer);
+                                // Reset reCAPTCHA if needed
+                                if (typeof grecaptcha !== 'undefined') {
+                                    grecaptcha.reset();
+                                }
+                            } else if (data.auth_error) {
+                                // Make auth error more prominent
+                                showFormMessage('Tên đăng nhập hoặc mật khẩu không chính xác.', 'error', messageContainer);
+                                // Clear password field for security
+                                password.value = '';
+                                // Focus on password field for better UX
+                                password.focus();
+                            } else if (data.errors) {
+                                data.errors.forEach(error => {
+                                    showFormMessage(error, 'error', messageContainer);
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFormMessage('Đã xảy ra lỗi. Vui lòng thử lại.', 'error', messageContainer);
+                    });
+                });
+            }
+            
+            // Register form validation
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    const username = document.getElementById('register-username');
+                    const email = document.getElementById('register-email');
+                    const password1 = document.getElementById('register-password1');
+                    const password2 = document.getElementById('register-password2');
+                    const messageContainer = document.getElementById('registerMessages');
+                    
+                    resetFormErrors();
+                    let hasErrors = false;
+                    
+                    if (!username.value.trim()) {
+                        showInputError(username, 'Vui lòng nhập tên đăng nhập');
+                        hasErrors = true;
+                    }
+                    
+                    if (!email.value.trim()) {
+                        showInputError(email, 'Vui lòng nhập email');
+                        hasErrors = true;
+                    } else {
+                        // Kiểm tra định dạng email
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(email.value.trim())) {
+                            showInputError(email, 'Email không hợp lệ');
+                            hasErrors = true;
+                        }
+                    }
+                    
+                    if (!password1.value) {
+                        showInputError(password1, 'Vui lòng nhập mật khẩu');
+                        hasErrors = true;
+                    }
+                    
+                    if (!password2.value) {
+                        showInputError(password2, 'Vui lòng xác nhận mật khẩu');
+                        hasErrors = true;
+                    } else if (password1.value !== password2.value) {
+                        showInputError(password2, 'Mật khẩu xác nhận không khớp');
+                        hasErrors = true;
+                    }
+                    
+                    if (hasErrors) {
+                        showFormMessage('Vui lòng điền đầy đủ thông tin đăng ký', 'error', messageContainer);
+                        e.preventDefault();
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    let recaptchaResponse = '';
+                    if (typeof grecaptcha !== 'undefined') {
+                        recaptchaResponse = grecaptcha.getResponse(1); 
+                    }
+                    
+                    const formData = new FormData(registerForm);
+                    
+                    // Send AJAX request
+                    fetch('{% url "register" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message and redirect
+                            showFormMessage('Đăng ký thành công! Đang chuyển hướng...', 'success', messageContainer);
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url || '{% url "login" %}';
+                            }, 1500);
+                        } else {
+                            // Display error messages
+                            messageContainer.innerHTML = '';
+                            
+                            if (data.captcha_error) {
+                                showFormMessage('Bạn cần hoàn thành kiểm tra CAPTCHA để tiếp tục.', 'error', messageContainer);
+                                // Reset reCAPTCHA if available
+                                if (typeof grecaptcha !== 'undefined') {
+                                    grecaptcha.reset(1); // Index 1 for registration form
+                                }
+                            } else if (data.errors) {
+                                data.errors.forEach(error => {
+                                    showFormMessage(error, 'error', messageContainer);
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFormMessage('Đã xảy ra lỗi. Vui lòng thử lại.', 'error', messageContainer);
+                    });
+                });
+            }
+            
+            function activateTab(tabName) {
+                // Update active tab
+                tabs.forEach(tab => {
+                    if (tab.getAttribute('data-tab') === tabName) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+                
+                // Update active content
+                tabContents.forEach(content => {
+                    if (content.id === tabName + '-tab') {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Tab click event
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activateTab(tab.getAttribute('data-tab'));
+                });
+            });
+            
+            // Switch tab links
+            switchTabLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    activateTab(link.getAttribute('data-tab'));
+                });
+            });
+            
+            // Auto-switch tab if URL contains register
+            if (window.location.href.includes('register')) {
+                activateTab('register');
+            }
+            
+            // Auto-dismiss messages after 5 seconds
+            setTimeout(function() {
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(function(message) {
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.style.display = 'none';
+                    }, 500);
+                });
+            }, 5000);
+        });
+        
+        // Toggle password visibility
+        function togglePasswordVisibility(toggleElement) {
+            const passwordInput = toggleElement.previousElementSibling;
+            const icon = toggleElement.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        }
+    </script>
+</body>
+</html>

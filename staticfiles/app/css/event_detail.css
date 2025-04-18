@@ -1,0 +1,329 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1e1e1e;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #e0e0e0;
+}
+.event-banner {
+    width: 100%;
+    position: relative;
+    background-color: #000;
+    margin: 0;
+    padding: 0;
+    aspect-ratio: 16/9;
+    max-height: 720px;
+}
+.event-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+    display: block;
+}
+.event-info-section {
+    background-color: #2a2a2a;
+    padding: 40px 0;
+    border-bottom: 1px solid #333;
+}
+.event-title {
+    font-size: 38px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+.event-meta {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #bbb;
+    font-size: 15px;
+}
+.meta-item i {
+    color: #2ecc71;
+    font-size: 18px;
+}
+.content-wrapper {
+    background-color: #1e1e1e;
+    background-image: radial-gradient(rgba(60, 60, 60, 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 40px 0;
+    min-height: 600px;
+    margin: 0;
+}
+.ticket-card {
+    background: #2a2a2a;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.ticket-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #333;
+}
+.ticket-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+}
+.session-item {
+    border-bottom: 1px solid #333;
+}
+.session-item:last-child {
+    border-bottom: none;
+}
+.session-header {
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.session-header:hover {
+    background-color: #333333;
+}
+.session-time {
+    color: #e0e0e0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.session-time i {
+    color: #aaa;
+}
+.ticket-types {
+    display: none;
+    background-color: #333333;
+}
+.ticket-type-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-top: 1px solid #333;
+}
+.ticket-type-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.ticket-type-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ticket-type-name {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.ticket-type-price {
+    color: #2ecc71;
+    font-weight: 700;
+    font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.btn-buy {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+.btn-buy:hover {
+    background-color: #27ae60;
+    color: white;
+    text-decoration: none;
+}
+.btn-buy.disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+.btn-buy.btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+.event-description {
+    background: #2a2a2a;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.event-description h4 {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.event-description p {
+    color: #bbb;
+    line-height: 1.6;
+}
+.chevron-icon {
+    transition: transform 0.3s;
+    color: #aaa;
+}
+.chevron-icon.rotated {
+    transform: rotate(180deg);
+}
+.text-danger {
+    color: #e57373 !important;
+    font-size: 13px;
+    margin-left: 8px;
+}
+.section-title {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.content-section {
+    background: #2a2a2a;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+}
+.content-section p {
+    color: #bbb;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    font-size: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.content-section p:last-child {
+    margin-bottom: 0;
+}
+.organizer-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+.organizer-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid #333;
+}
+.organizer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.organizer-details {
+    flex: 1;
+}
+.organizer-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.organizer-description {
+    color: #bbb;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.organizer-contact {
+    display: flex;
+    gap: 16px;
+}
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #bbb;
+    font-size: 14px;
+}
+.contact-item i {
+    color: #2ecc71;
+    font-size: 16px;
+}
+.ticket-section {
+    margin-top: 24px;
+}
+.content-wrapper .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.card {
+    background-color: #2a2a2a !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.card-body {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+.card-title {
+    color: #ffffff;
+}
+.text-muted {
+    color: #aaa !important;
+}
+.text-center {
+    color: #aaa;
+}
+
+/* New styles for collapsible content */
+.content-collapsed {
+    max-height: 120px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0;
+}
+
+.content-collapsed::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(transparent, #2a2a2a);
+}
+
+.content-toggle {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    color: #2ecc71;
+    font-weight: 500;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.2s;
+}
+
+.content-toggle:hover {
+    opacity: 0.8;
+}
+
+.content-toggle i {
+    transition: transform 0.3s;
+}
+
+.content-toggle.expanded i {
+    transform: rotate(180deg);
+} 

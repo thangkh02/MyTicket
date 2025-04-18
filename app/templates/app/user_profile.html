@@ -1,0 +1,143 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Hồ sơ của tôi - MyTicket{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="Profile Picture">
+            {% else %}
+                <img src="{% static 'app/images/default-avatar.jpg' %}" alt="Default Avatar">
+            {% endif %}
+            <label class="avatar-overlay" for="avatar-upload">
+                <div class="avatar-edit-btn">
+                    <i class="bi bi-camera"></i>
+                </div>
+            </label>
+        </div>
+        <div class="profile-info">
+            <h1>{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</h1>
+            <p><i class="bi bi-envelope"></i> {{ user.email }}</p>
+            {% if user.profile.phone_number %}
+                <p><i class="bi bi-telephone"></i> {{ user.profile.phone_number }}</p>
+            {% endif %}
+            {% if user.profile.address %}
+                <p><i class="bi bi-geo-alt"></i> {{ user.profile.address }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <!-- Thông tin cá nhân -->
+        <div class="profile-section">
+            <form method="POST" enctype="multipart/form-data" class="profile-form">
+                {% csrf_token %}
+                <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden-input">
+                
+                <div class="section-header">
+                    <h2><i class="bi bi-person-circle"></i> Thông tin cá nhân</h2>
+                    <span class="section-subtitle">Cập nhật thông tin cá nhân của bạn</span>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="full_name"><i class="bi bi-person"></i> Họ và tên</label>
+                        <input type="text" id="full_name" name="full_name" value="{{ user.get_full_name }}" placeholder="Nhập họ và tên của bạn" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email"><i class="bi bi-envelope"></i> Email</label>
+                        <input type="email" id="email" value="{{ user.email }}" disabled title="Email không thể thay đổi">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone_number"><i class="bi bi-telephone"></i> Số điện thoại</label>
+                        <input type="tel" id="phone_number" name="phone_number" value="{{ user.profile.phone_number }}" placeholder="Nhập số điện thoại">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birth_date"><i class="bi bi-calendar"></i> Ngày sinh</label>
+                        <input type="date" id="birth_date" name="birth_date" value="{{ user.profile.birth_date|date:'Y-m-d' }}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="address"><i class="bi bi-geo-alt"></i> Địa chỉ</label>
+                        <input type="text" id="address" name="address" value="{{ user.profile.address|default:'' }}" placeholder="Nhập địa chỉ của bạn">
+                    </div>
+                </div>
+                
+                <div class="form-group gender-group">
+                    <label><i class="bi bi-gender-ambiguous"></i> Giới tính</label>
+                    <div class="gender-options">
+                        <div class="gender-option {% if user.profile.gender == 'M' %}selected{% endif %}" data-value="M">
+                            <div class="gender-radio-icon">
+                                <i></i>
+                            </div>
+                            <span>Nam</span>
+                            <input type="radio" name="gender" value="M" {% if user.profile.gender == 'M' %}checked{% endif %} class="gender-input">
+                        </div>
+                        <div class="gender-option {% if user.profile.gender == 'F' %}selected{% endif %}" data-value="F">
+                            <div class="gender-radio-icon">
+                                <i></i>
+                            </div>
+                            <span>Nữ</span>
+                            <input type="radio" name="gender" value="F" {% if user.profile.gender == 'F' %}checked{% endif %} class="gender-input">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const genderOptions = document.querySelectorAll('.gender-option');
+        const genderInputs = document.querySelectorAll('.gender-input');
+        
+        // Xử lý khi người dùng nhấp vào tùy chọn giới tính
+        genderOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Bỏ chọn tất cả các tùy chọn
+                genderOptions.forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Đánh dấu tùy chọn đã chọn và chọn nút radio tương ứng
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+        });
+
+        document.getElementById('avatar-upload').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    document.querySelector('.profile-avatar img').src = e.target.result;
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    });
+</script>
+{% endblock %}

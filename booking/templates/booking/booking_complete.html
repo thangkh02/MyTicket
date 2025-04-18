@@ -1,0 +1,190 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Đặt vé thành công - {{ event.title }} - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow success-card">
+                <div class="card-body p-0">
+                    <!-- Header kèm icon thành công -->
+                    <div class="text-center p-4 success-header">
+                        <div class="success-icon mb-3">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h2>Đặt vé thành công!</h2>
+                        <p class="lead">Cảm ơn bạn đã đặt vé. Thông tin vé đã được gửi vào email của bạn.</p>
+                    </div>
+                    
+                    <!-- Thông tin đặt vé -->
+                    <div class="booking-details p-4">
+                        <div class="booking-info">
+                            <h4>Thông tin đặt vé</h4>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Mã đơn hàng:</div>
+                                <div class="col-md-8">{{ booking.order_id }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Thời gian đặt:</div>
+                                <div class="col-md-8">{{ booking.booking_date|date:"H:i, d/m/Y" }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Tên người đặt:</div>
+                                <div class="col-md-8">{{ booking.name }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Email:</div>
+                                <div class="col-md-8">{{ booking.email }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">SĐT:</div>
+                                <div class="col-md-8">{{ booking.phone }}</div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="event-info">
+                            <h4>Thông tin sự kiện</h4>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Sự kiện:</div>
+                                <div class="col-md-8">{{ event.title }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Thời gian:</div>
+                                <div class="col-md-8">
+                                    {% if session.start_time.date == session.end_time.date %}
+                                        {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"d/m/Y" }}
+                                    {% else %}
+                                        {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Địa điểm:</div>
+                                <div class="col-md-8">{{ event.location }}</div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="ticket-info">
+                            <h4>Thông tin vé</h4>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Loại vé:</div>
+                                <div class="col-md-8">{{ booking.ticket_type.name }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Số lượng:</div>
+                                <div class="col-md-8">{{ booking.quantity }} vé</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Tổng tiền:</div>
+                                <div class="col-md-8 text-success fw-bold">{{ booking.total_price|floatformat:0|intcomma }}đ</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Trạng thái:</div>
+                                <div class="col-md-8">
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                </div>
+                            </div>
+                            
+                            {% if booking.payment_date %}
+                            <div class="row mb-3">
+                                <div class="col-md-4 fw-bold">Thời gian thanh toán:</div>
+                                <div class="col-md-8">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="qr-code-section text-center mt-4">
+                            <h5 class="mb-3">Mã QR vé của bạn</h5>
+                            <div class="qr-code-container mb-3">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ booking.order_id }}" alt="QR code vé" class="img-fluid">
+                            </div>
+                            <p class="text-muted small">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
+                        </div>
+                        
+                        <div class="booking-footer text-center mt-4">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-house"></i> Trang chủ
+                            </a>
+                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-success">
+                                <i class="bi bi-ticket-perforated"></i> Vé của tôi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .success-header {
+        background-color: #f6fff8;
+        border-bottom: 1px solid #eaf6ec;
+    }
+    
+    .success-icon {
+        font-size: 64px;
+        color: #28a745;
+        margin-bottom: 10px;
+    }
+    
+    .booking-details {
+        background-color: white;
+    }
+    
+    .booking-details h4 {
+        color: #333;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .qr-code-container {
+        display: inline-block;
+        background-color: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .booking-footer {
+        margin-top: 30px;
+    }
+    
+    .booking-footer .btn {
+        padding: 8px 20px;
+    }
+
+    hr {
+        margin: 30px 0;
+        opacity: 0.15;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Đặt vé: {{ event.title }} - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card bg-dark">
+                <div class="card-header bg-success text-white">
+                    <h2 class="card-title mb-0">Đặt vé</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if event.image %}
+                                <img src="{{ event.image.url }}" class="img-fluid rounded" alt="{{ event.title }}">
+                            {% else %}
+                                <img src="{% static 'app/images/default-event.jpg' %}" class="img-fluid rounded" alt="{{ event.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h3>{{ event.title }}</h3>
+                            {% if event.earliest_date %}
+                            <p><i class="bi bi-calendar-event"></i> {{ event.earliest_date|date:"H:i - l, d/m/Y" }}</p>
+                            {% endif %}
+                            <p><i class="bi bi-geo-alt-fill"></i> {{ event.location }}</p>
+                            {% if event.lowest_price %}
+                            <p class="text-success fw-bold">{{ event.lowest_price|floatformat:0|intcomma }}đ / vé</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="POST" id="booking-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Họ tên</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">Số điện thoại</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Số lượng vé</label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Tiếp tục</button>
+                            <a href="{% url 'event_detail' event.id %}" class="btn btn-outline-light">Quay lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function handlePaymentSuccess() {
+  // Đánh dấu đã thanh toán thành công
+  window.isSuccess = true;
+  
+  // Dừng các interval
+  if (window.checkInterval) {
+    clearInterval(window.checkInterval);
+    window.checkInterval = null;
+  }
+  
+  if (window.timerInterval) {
+    clearInterval(window.timerInterval);
+    window.timerInterval = null;
+  }
+  
+  console.log("Thanh toán thành công - Đã dừng kiểm tra");
+  
+  // Lấy order_id để gọi API
+  const orderId = document.getElementById('modal-order-id').textContent;
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+  console.log("Gọi API cập nhật với order_id:", orderId);
+  
+  // Gọi API verify_payment để cập nhật database
+  fetch('/booking/verify-payment/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrfToken
+    },
+    body: `order_id=${orderId}`
+  })
+  .then(response => {
+    console.log("API Response Status:", response.status);
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error("API Error Details:", text);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log("API Success:", data);
+    
+    // Ẩn giao diện đang chờ
+    pendingStatus.style.display = 'none';
+    
+    // Hiển thị giao diện thành công
+    const successHTML = `
+      <div class="payment-status-success" style="text-align:center; padding:30px 20px;">
+        <div style="font-size:48px; color:#28a745; margin-bottom:15px;">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3>Thanh toán thành công</h3>
+        <p>Cảm ơn bạn đã đặt vé. Vé của bạn đã được xác nhận.</p>
+        <button type="button" id="complete-button" 
+          style="background-color:#28a745; color:white; border:none; 
+          padding:10px 20px; border-radius:30px; margin-top:20px; cursor:pointer;">
+          Hoàn tất đặt vé
+        </button>
+      </div>
+    `;
+    
+    document.querySelector('.payment-modal-body').insertAdjacentHTML('beforeend', successHTML);
+    
+    // Thêm event listener cho nút hoàn tất
+    setTimeout(() => {
+      const completeButton = document.getElementById('complete-button');
+      if (completeButton) {
+        completeButton.addEventListener('click', function() {
+          if (data.success && data.redirect_url) {
+            console.log("Chuyển hướng đến:", data.redirect_url);
+            window.location.href = data.redirect_url;
+          } else {
+            console.log("Submit form thông thường");
+            document.getElementById('booking-form').submit();
+          }
+        });
+      }
+    }, 100);
+  })
+  .catch(error => {
+    console.error("Lỗi khi gọi API verify_payment:", error);
+    
+    // Vẫn hiển thị UI thành công, nhưng submit form thay vì chuyển hướng
+    pendingStatus.style.display = 'none';
+    const successHTML = `
+      <div class="payment-status-success" style="text-align:center; padding:30px 20px;">
+        <div style="font-size:48px; color:#28a745; margin-bottom:15px;">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3>Thanh toán thành công</h3>
+        <p>Cảm ơn bạn đã đặt vé. Vé của bạn đã được xác nhận.</p>
+        <button type="button" id="complete-button" 
+          style="background-color:#28a745; color:white; border:none; 
+          padding:10px 20px; border-radius:30px; margin-top:20px; cursor:pointer;">
+          Hoàn tất đặt vé
+        </button>
+      </div>
+    `;
+    
+    document.querySelector('.payment-modal-body').insertAdjacentHTML('beforeend', successHTML);
+    
+    // Thêm event listener cho nút hoàn tất
+    setTimeout(() => {
+      const completeButton = document.getElementById('complete-button');
+      if (completeButton) {
+        completeButton.addEventListener('click', function() {
+          console.log("Submit form sau lỗi API");
+          document.getElementById('booking-form').submit();
+        });
+      }
+    }, 100);
+  });
+}
+</script>
+{% endblock %}

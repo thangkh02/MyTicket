@@ -1,0 +1,201 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Vé của tôi - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Vé của tôi</h2>
+    
+    <!-- Vé sắp tới -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Sự kiện sắp tới</h5>
+            <span class="badge bg-light text-dark">{{ upcoming_events|length }} vé</span>
+        </div>
+        <div class="card-body">
+            {% if upcoming_events %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Sự kiện</th>
+                                <th>Thời gian</th>
+                                <th>Loại vé</th>
+                                <th>Số lượng</th>
+                                <th>Tổng tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in upcoming_events %}
+                            <tr>
+                                <td><code>{{ booking.order_id }}</code></td>
+                                <td>{{ booking.event.title }}</td>
+                                <td>{{ booking.session.start_time|date:"H:i, d/m/Y" }}</td>
+                                <td>{{ booking.ticket_type.name }}</td>
+                                <td>{{ booking.quantity }} vé</td>
+                                <td>{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                                <td>
+                                    <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
+                                    {% if booking.can_cancel %}
+                                    <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-x-circle"></i> Hủy vé
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-3">Bạn không có vé cho sự kiện sắp tới nào.</p>
+                <div class="text-center">
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="bi bi-calendar-event"></i> Khám phá sự kiện
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Vé đang chờ thanh toán -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Chờ thanh toán</h5>
+            <span class="badge bg-light text-dark">{{ pending_bookings|length }} đơn</span>
+        </div>
+        <div class="card-body">
+            {% if pending_bookings %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Sự kiện</th>
+                                <th>Thời gian đặt</th>
+                                <th>Loại vé</th>
+                                <th>Số lượng</th>
+                                <th>Tổng tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in pending_bookings %}
+                            <tr>
+                                <td><code>{{ booking.order_id }}</code></td>
+                                <td>{{ booking.event.title }}</td>
+                                <td>{{ booking.booking_date|date:"H:i, d/m/Y" }}</td>
+                                <td>{{ booking.ticket_type.name }}</td>
+                                <td>{{ booking.quantity }} vé</td>
+                                <td>{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                                <td>
+                                    <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-credit-card"></i> Thanh toán
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-3">Bạn không có đơn hàng đang chờ thanh toán.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Vé đã tham gia -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Sự kiện đã tham gia</h5>
+            <span class="badge bg-light text-dark">{{ past_events|length }} sự kiện</span>
+        </div>
+        <div class="card-body">
+            {% if past_events %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Sự kiện</th>
+                                <th>Thời gian</th>
+                                <th>Loại vé</th>
+                                <th>Số lượng</th>
+                                <th>Tổng tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in past_events %}
+                            <tr>
+                                <td><code>{{ booking.order_id }}</code></td>
+                                <td>{{ booking.event.title }}</td>
+                                <td>{{ booking.session.start_time|date:"H:i, d/m/Y" }}</td>
+                                <td>{{ booking.ticket_type.name }}</td>
+                                <td>{{ booking.quantity }} vé</td>
+                                <td>{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                                <td>
+                                    <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-sm btn-secondary">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-3">Bạn chưa tham gia sự kiện nào trước đây.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Vé đã hủy -->
+    {% if cancelled_bookings %}
+    <div class="card">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Vé đã hủy</h5>
+            <span class="badge bg-light text-dark">{{ cancelled_bookings|length }} vé</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Sự kiện</th>
+                            <th>Thời gian hủy</th>
+                            <th>Loại vé</th>
+                            <th>Số tiền hoàn lại</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in cancelled_bookings %}
+                        <tr>
+                            <td><code>{{ booking.order_id }}</code></td>
+                            <td>{{ booking.event.title }}</td>
+                            <td>{{ booking.cancelled_at|date:"H:i, d/m/Y" }}</td>
+                            <td>{{ booking.ticket_type.name }} ({{ booking.quantity }} vé)</td>
+                            <td>{{ booking.refund_amount|floatformat:0|intcomma }}đ</td>
+                            <td>
+                                <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-sm btn-secondary">
+                                    <i class="bi bi-eye"></i> Xem
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

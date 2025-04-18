@@ -1,0 +1,884 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Trang chủ - MyTicket{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styles cho trang chủ hiện đại - tông màu trắng, xanh lá và xanh nhạt */
+    :root {
+        --card-radius: 12px;
+        --animation-speed: 0.3s;
+        --primary-green: #00a859;
+        --light-green: #59d6a8;
+        --teal-blue: #4ba6da;
+        --light-blue: #79c9f5;
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+        --section-bg: #ffffff;
+    }
+    
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    /* Section headers kiểu mới - giống ticketgo */
+    .section-header {
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-green);
+        padding-left: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-title {
+        margin: 0;
+        font-weight: 700;
+        color: #333;
+        font-size: 1.4rem;
+        display: inline-block;
+        padding: 0;
+        background-color: transparent;
+        box-shadow: none;
+        border: none;
+    }
+    
+    .section-link {
+        color:var(--primary-green);
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-link:hover {
+        color: var(--light-green);
+    }
+    
+    .section-link i {
+        margin-left: 4px;
+        font-size: 0.8rem;
+    }
+    
+    /* Event cards - kiểu mới */
+    .event-grid {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+    
+    .event-card {
+        flex: 0 0 calc(25% - 20px);
+        margin: 0 10px 25px;
+        background: #ffffff;
+        border-radius: var(--card-radius);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all var(--animation-speed);
+        border: none;
+        position: relative;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .event-img-container {
+        position: relative;
+        overflow: hidden;
+        height: 180px;
+    }
+    
+    .event-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.5s ease;
+    }
+    
+    .event-card:hover .event-img {
+        transform: scale(1.05);
+    }
+    
+    .event-content {
+        padding: 15px;
+    }
+    
+    .event-title {
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        color: #333;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        height: 42px;
+    }
+    
+    .event-meta {
+        font-size: 13px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    
+    .event-meta i {
+        color: var(--primary-green);
+        margin-right: 5px;
+        font-size: 14px;
+    }
+    
+    .event-price {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary-green);
+        margin-top: 8px;
+    }
+    
+    /* Category headers - giống ticketgo */
+    .category-section {
+        margin-bottom: 2.5rem;
+        padding-top: 1rem;
+    }
+    
+    /* Category badge - màu sắc tươi sáng */
+    .category-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: white;
+        z-index: 2;
+    }
+    
+    .music-badge {
+        background: linear-gradient(to right, var(--primary-green), var(--light-green));
+    }
+    
+    .arts-badge {
+        background: linear-gradient(to right, var(--teal-blue), var(--light-blue));
+    }
+    
+    .sports-badge {
+        background: linear-gradient(to right, #ff7e5f, #feb47b);
+    }
+    
+    .others-badge {
+        background: linear-gradient(to right, #8e54e9, #4776e6);
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .event-card {
+            flex: 0 0 calc(33.33% - 20px);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .event-card {
+            flex: 0 0 calc(50% - 20px);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .event-card {
+            flex: 0 0 calc(100% - 20px);
+        }
+    }
+    
+    /* Banner carousel */
+    .banner-container {
+        height: 450px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        position: relative;
+    }
+    
+    .banner-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .banner-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+        padding: 50px 25px 25px;
+    }
+    
+    .carousel-indicators {
+        margin-bottom: 10px;
+    }
+    
+    .carousel-indicators button {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: rgba(255,255,255,0.5);
+        margin: 0 4px;
+    }
+    
+    .carousel-indicators button.active {
+        background-color: white;
+        transform: scale(1.2);
+    }
+    
+    /* Search results */
+    .search-results {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .search-title {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+    }
+    
+    .btn-back {
+        color: #555;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .btn-back:hover {
+        color: var(--primary-green);
+    }
+    
+    .btn-back i {
+        margin-right: 5px;
+    }
+    
+    /* Loading animation */
+    .loading-animation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(to right, var(--primary-green), var(--light-green));
+        animation: loading 2s ease infinite;
+        z-index: 9999;
+    }
+    
+    @keyframes loading {
+        0% { width: 0; left: 0; }
+        50% { width: 100%; left: 0; }
+        100% { width: 0; left: 100%; }
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(to right, var(--primary-green), var(--light-green));
+        border: none;
+        border-radius: 4px;
+        color: white;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        box-shadow: 0 4px 10px rgba(0, 168, 89, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Xem thêm link */
+    .view-more {
+        display: inline-block;
+        color: var(--primary-green);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .view-more:hover {
+        color: var(--light-green);
+    }
+    
+    .view-more i {
+        margin-left: 3px;
+        transition: transform 0.2s ease;
+    }
+    
+    .view-more:hover i {
+        transform: translateX(3px);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Loading bar animation -->
+<div class="loading-animation"></div>
+
+<!-- Phần nội dung trang chủ -->
+<div class="container mt-4">    
+    <!-- Hiển thị kết quả tìm kiếm hoặc lọc nếu có -->
+    {% if search_query or active_category %}
+        <div class="search-results">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="search-title m-0">
+                    {% if search_query and active_category %}
+                        Kết quả tìm kiếm cho "{{ search_query }}" trong {{ active_category_display }}
+                    {% elif search_query %}
+                        Kết quả tìm kiếm cho "{{ search_query }}"
+                    {% elif active_category %}
+                        Sự kiện {{ active_category_display }}
+                    {% endif %}
+                </h3>
+                <a href="{% url 'home' %}" class="btn-back">
+                    <i class="bi bi-caret-left-fill"></i> Quay về trang chủ
+                </a>
+            </div>
+            
+            {% if search_results %}
+                <div class="event-grid">
+                    {% for event in search_results %}
+                    <div class="event-card">
+                        <div class="category-badge {% if event.category == 'concert' %}music-badge{% elif event.category == 'theater' %}arts-badge{% elif event.category == 'sports' %}sports-badge{% else %}others-badge{% endif %}">
+                            {{ event.get_category_display|default:"Khác" }}
+                        </div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+                        
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    {% if search_query and active_category %}
+                        Không tìm thấy kết quả nào cho "{{ search_query }}" trong {{ active_category_display }}.
+                    {% elif search_query %}
+                        Không tìm thấy kết quả nào cho "{{ search_query }}".
+                    {% elif active_category %}
+                        Không có sự kiện nào thuộc thể loại {{ active_category_display }}.
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <!-- Carousel Banner - chỉ hiển thị khi không có tìm kiếm/lọc -->
+        <div id="mainCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% if banner_events %}
+                    {% for event in banner_events %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <a href="{% url 'event_detail' event.id %}">
+                                <div class="banner-container">
+                                    {% if event.image %}
+                                        <img src="{{ event.image.url }}" alt="{{ event.title }}">
+                                    {% else %}
+                                        <img src="{% static 'app/images/default-event.jpg' %}" alt="Default Banner">
+                                    {% endif %}
+                        
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="carousel-item active">
+                        <div class="banner-container position-relative">
+                            <img src="{% static 'app/images/default-banner.jpg' %}" alt="Default Banner">
+                            <div class="banner-overlay">
+                                <h3 class="banner-title">Chào mừng đến với MyTicket</h3>
+                                <div class="banner-info">
+                                    <span>Nơi bạn tìm thấy những sự kiện hấp dẫn nhất</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            
+            <div class="carousel-indicators">
+                {% if banner_events %}
+                    {% for event in banner_events %}
+                        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+                    {% endfor %}
+                {% else %}
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sự kiện nổi bật -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 class="section-title">Sự kiện nổi bật</h2>
+            </div>
+            
+            <div class="event-grid">
+                {% if featured_events %}
+                    {% for event in featured_events %}
+                    <div class="event-card">
+                        <div class="category-badge {% if event.category == 'concert' %}music-badge{% elif event.category == 'theater' %}arts-badge{% elif event.category == 'sports' %}sports-badge{% else %}others-badge{% endif %}">
+                            {{ event.get_category_display|default:"Khác" }}
+                        </div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Hiện chưa có sự kiện nổi bật nào.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Âm nhạc -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 class="section-title">Âm nhạc</h2>
+                <a href="{% url 'home' %}?category=concert" class="section-link">
+                    Xem thêm <i class="bi bi-caret-right"></i>
+                </a>
+            </div>
+            
+            <div class="event-grid">
+                {% if music_events %}
+                    {% for event in music_events %}
+                    <div class="event-card">
+                        <div class="category-badge music-badge">Âm nhạc</div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> Hiện chưa có sự kiện âm nhạc nào.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sân khấu & Nghệ thuật -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 class="section-title">Sân khấu & Nghệ thuật</h2>
+                <a href="{% url 'home' %}?category=theater" class="section-link">
+                    Xem thêm <i class="bi bi-caret-right"></i>
+                </a>
+            </div>
+            
+            <div class="event-grid">
+                {% if arts_events %}
+                    {% for event in arts_events %}
+                    <div class="event-card">
+                        <div class="category-badge arts-badge">Nghệ thuật</div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> Hiện chưa có sự kiện sân khấu và nghệ thuật nào.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sự kiện thể thao - Thêm danh mục thể thao -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 class="section-title">Thể thao</h2>
+                <a href="{% url 'home' %}?category=sports" class="section-link">
+                    Xem thêm <i class="bi bi-caret-right"></i>
+                </a>
+            </div>
+            
+            <div class="event-grid">
+                {% if sports_events %}
+                    {% for event in sports_events %}
+                    <div class="event-card">
+                        <div class="category-badge sports-badge">Thể thao</div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> Hiện chưa có sự kiện thể thao nào.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sự kiện khác -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 class="section-title">Sự kiện khác</h2>
+                <a href="{% url 'home' %}?category=other" class="section-link">
+                    Xem thêm <i class="bi bi-caret-right"></i>
+                </a>
+            </div>
+            
+            <div class="event-grid">
+                {% if other_events %}
+                    {% for event in other_events %}
+                    <div class="event-card">
+                        <div class="category-badge others-badge">{{ event.get_category_display|default:"Khác" }}</div>
+                        <a href="{% url 'event_detail' event.id %}">
+                            <div class="event-img-container">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" class="event-img" alt="{{ event.title }}" loading="lazy">
+                                {% else %}
+                                    <img src="{% static 'app/images/default-event.jpg' %}" class="event-img" alt="Default Image" loading="lazy">
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="event-content">
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <i class="bi bi-calendar3"></i>
+                                {% if event.earliest_date %}
+                                    {{ event.earliest_date|date:"d/m/Y" }}
+                                    {% if event.sessions.count > 1 %}
+                                    <small class="text-muted ms-1">({{ event.sessions.count }} mốc thời gian)</small>
+                                    {% endif %}
+                                {% else %}
+                                    Chưa xác định
+                                {% endif %}
+                            </div>
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span class="location-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {% if event.location %}{{ event.location }}{% else %}Đang cập nhật{% endif %}
+                                </span>
+                            </div>
+    
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="event-price">
+                                    {% if event.lowest_price %}Từ {{ event.lowest_price|floatformat:0|intcomma }}đ{% else %}Liên hệ{% endif %}
+                                </div>
+                                <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> Hiện chưa có sự kiện khác nào.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation cho các section khi cuộn trang
+        const sections = document.querySelectorAll('.row');
+        const sectionTitles = document.querySelectorAll('.section-title');
+        
+        // Hàm kiểm tra phần tử có trong viewport không
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.85 &&
+                rect.bottom >= 0
+            );
+        }
+        
+        // Animation cho các section khi scroll
+        function animateSections() {
+            sections.forEach(section => {
+                if (isInViewport(section) && !section.classList.contains('animated')) {
+                    section.classList.add('animated');
+                    section.style.animation = 'fadeIn 0.8s ease forwards';
+                }
+            });
+            
+            sectionTitles.forEach(title => {
+                if (isInViewport(title) && !title.classList.contains('animated')) {
+                    title.classList.add('animated');
+                    title.style.animation = 'fadeIn 0.8s ease forwards';
+                }
+            });
+        }
+        
+        // Chạy animation ngay khi trang load và khi scroll
+        animateSections();
+        window.addEventListener('scroll', animateSections);
+        
+        // Hiệu ứng hover card
+        const eventCards = document.querySelectorAll('.event-card');
+        eventCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px)';
+                this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.15)';
+                
+                // Thêm hiệu ứng zoom ảnh
+                const img = this.querySelector('.img-container img');
+                if (img) {
+                    img.style.transform = 'scale(1.1)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+                this.style.boxShadow = '';
+                
+                // Reset hiệu ứng zoom ảnh
+                const img = this.querySelector('.img-container img');
+                if (img) {
+                    img.style.transform = '';
+                }
+            });
+        });
+        
+        // Cải thiện carousel
+        const carousel = document.getElementById('mainCarousel');
+        if (carousel) {
+            // Tự động chuyển slide sau 5 giây
+            const carouselInstance = new bootstrap.Carousel(carousel, {
+                interval: 5000
+            });
+            
+            // Thêm hiệu ứng khi chuyển slide
+            carousel.addEventListener('slide.bs.carousel', function (e) {
+                const activeItem = this.querySelector('.active');
+                const nextItem = e.relatedTarget;
+                
+                if (activeItem) {
+                    activeItem.style.transition = 'transform 0.5s ease';
+                    activeItem.style.transform = 'scale(0.95)';
+                }
+                
+                if (nextItem) {
+                    nextItem.style.transition = 'transform 0.5s ease';
+                    nextItem.style.transform = 'scale(1)';
+                }
+            });
+        }
+        
+        // Hiệu ứng làm mượt khi load hình ảnh
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            // Áp dụng hiệu ứng fade-in khi ảnh tải xong
+            if (img.complete) {
+                img.style.opacity = '1';
+            } else {
+                img.style.opacity = '0';
+                img.style.transition = 'opacity 0.5s ease';
+                img.onload = function() {
+                    this.style.opacity = '1';
+                };
+            }
+        });
+        
+        // Hiệu ứng loading kết thúc sau khi trang tải xong
+        setTimeout(() => {
+            const loadingBar = document.querySelector('.loading-animation');
+            if (loadingBar) {
+                loadingBar.style.opacity = '0';
+                setTimeout(() => {
+                    loadingBar.style.display = 'none';
+                }, 500);
+            }
+        }, 1500);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Đăng nhập / Đăng ký - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark auth-card">
+                <div class="card-header">
+                    <h2>{% if request.path == '/login/' %}Đăng nhập{% else %}Đăng ký{% endif %}</h2>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} custom-alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if request.path == '/login/' %}
+                        <form method="POST" class="login-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-person"></i> Tên đăng nhập
+                                </label>
+                                {{ form.username }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-lock"></i> Mật khẩu
+                                </label>
+                                {{ form.password }}
+                            </div>
+                            <button type="submit" class="login-button">
+                                <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                            </button>
+                        </form>
+                        <div class="register-link">
+                            Chưa có tài khoản? <a href="{% url 'register' %}">Đăng ký ngay</a>
+                        </div>
+                    {% else %}
+                        <form method="POST" class="login-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-person"></i> Tên đăng nhập
+                                </label>
+                                {{ form.username }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-envelope"></i> Email
+                                </label>
+                                {{ form.email }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-lock"></i> Mật khẩu
+                                </label>
+                                {{ form.password1 }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="bi bi-lock-fill"></i> Xác nhận mật khẩu
+                                </label>
+                                {{ form.password2 }}
+                            </div>
+                            <button type="submit" class="login-button">
+                                <i class="bi bi-person-plus"></i> Đăng ký
+                            </button>
+                        </form>
+                        <div class="register-link">
+                            Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
