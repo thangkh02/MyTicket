@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MyTicket{% endblock %}</title>
-    {% load static %}
+
+    <link rel="icon" type="image/x-icon" sizes="180x180" href="{% static 'app/images/favicon.png' %}">
+    <link rel="manifest" href="{% static 'app/site.webmanifest' %}">
+    <meta name="theme-color" content="#2dc275">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -511,6 +515,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+
     <!-- Thanh Navbar -->
     <div class="navbar custom-green py-2"> 
         <div class="container-fluid">

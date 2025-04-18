@@ -1089,7 +1089,7 @@
         const timestamp = new Date().getTime().toString().slice(-6);
         const date = new Date();
         const dateStr = `${date.getDate()}${date.getMonth() + 1}${date.getFullYear().toString().slice(-2)}`;
-        const orderId =`EV${eventId}U${userId}T${dateStr}${timestamp}`;
+        const orderId =`EV${eventId}U${userId}_T${dateStr}${timestamp}`;
         
         const price = parseInt(totalPrice.replace(/[^\d]/g, ''));
         modalAmount.textContent = totalPrice;
