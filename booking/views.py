@@ -35,7 +35,10 @@ def generate_order_id(event_id, user_id):
     """Sinh mã order_id theo định dạng chuẩn"""
     user_part = user_id if user_id else 'GUEST'
     timestamp = timezone.now().strftime('%d%m%y%H%M%S')
-    return f"EV{event_id}U{user_part}_T{timestamp}"
+    # Thêm log để debug
+    order_id = f"EV{event_id}U{user_part}_T{timestamp}"
+    print(f"Generated order_id: {order_id}")
+    return order_id
 
 def book_ticket(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
@@ -58,7 +61,12 @@ def book_ticket(request, event_id):
     elif request.method == "POST":
         session_id = request.POST.get('session_id')
         selected_tickets_json = request.POST.get('selected_tickets')
-        order_id = request.POST.get('order_id')
+        order_id = request.POST.get('order_id')  # Lấy order_id từ form
+        confirmed_order_id = request.POST.get('confirmed_order_id')  # Order ID khi đã thanh toán
+        
+        # Ưu tiên order_id đã xác nhận nếu có (đã thanh toán xong)
+        if confirmed_order_id:
+            order_id = confirmed_order_id
         
         if not session_id or not selected_tickets_json:
             messages.error(request, "Thông tin đặt vé không hợp lệ.")
@@ -69,16 +77,41 @@ def book_ticket(request, event_id):
             session = get_object_or_404(EventSession, pk=session_id, event=event)
             
             # Tạo booking mới hoặc tìm booking hiện có nếu có order_id
+            booking = None
             if order_id:
-                booking = get_object_or_404(Booking, order_id=order_id)
-                # Kiểm tra nếu đã thanh toán thì chuyển đến trang hoàn tất
-                if booking.payment_status == 'Paid':
-                    return redirect('booking:complete_booking', booking_id=booking.id)
-            else:
-                # Tạo mã đơn hàng nếu chưa có
-                order_id = generate_order_id(event.id, request.user.id if request.user.is_authenticated else None)
-
-                # Tạo booking mới
+                # Tìm booking với order_id chính xác
+                try:
+                    booking = Booking.objects.get(order_id=order_id)
+                    logger.info(f"Tìm thấy booking với order_id: {order_id}")
+                except Booking.DoesNotExist:
+                    # Xử lý các biến thể của order_id
+                    if '_' in order_id:
+                        # Thử tìm với order_id không có dấu gạch dưới
+                        try:
+                            modified_order_id = order_id.replace('_', '')
+                            booking = Booking.objects.get(order_id=modified_order_id)
+                            logger.info(f"Tìm thấy booking với order_id không có dấu gạch dưới: {modified_order_id}")
+                        except Booking.DoesNotExist:
+                            pass
+                    else:
+                        # Thử tìm với order_id có dấu gạch dưới
+                        try:
+                            # Tìm vị trí của T trong chuỗi
+                            t_pos = order_id.find('T')
+                            if t_pos > 0:
+                                modified_order_id = f"{order_id[:t_pos]}_T{order_id[t_pos+1:]}"
+                                booking = Booking.objects.get(order_id=modified_order_id)
+                                logger.info(f"Tìm thấy booking với order_id có dấu gạch dưới: {modified_order_id}")
+                        except Booking.DoesNotExist:
+                            pass
+            
+            # Nếu không tìm thấy booking nào, tạo mới với order_id từ form
+            if not booking:
+                # Sử dụng order_id từ frontend hoặc tạo mới nếu không có
+                if not order_id:
+                    order_id = generate_order_id(event.id, request.user.id if request.user.is_authenticated else None)
+                
+                # Tạo booking mới với order_id từ frontend
                 booking = Booking(
                     user=request.user if request.user.is_authenticated else None,
                     event=event,
@@ -88,8 +121,13 @@ def book_ticket(request, event_id):
                     order_id=order_id
                 )
                 booking.save()
+                logger.info(f"Đã tạo booking mới với order_id: {order_id}")
             
-            # Lưu chi tiết vé được đặt nếu là đơn hàng mới
+            # Kiểm tra nếu đã thanh toán thì chuyển đến trang hoàn tất
+            if booking.payment_status == 'Paid':
+                return redirect('booking:complete_booking', booking_id=booking.id)
+            
+            # Lưu chi tiết vé được đặt nếu là đơn hàng mới hoặc chưa có thông tin vé
             if booking.ticket_type is None:
                 total_amount = 0
                 total_quantity = 0
@@ -105,13 +143,8 @@ def book_ticket(request, event_id):
                 booking.total_price = total_amount
                 booking.save()
             
-            # Chuyển đến trang thanh toán
-            return render(request, 'booking/payment.html', {
-                'booking': booking,
-                'event': event,
-                'session': session,
-                'order_id': order_id
-            })
+            # Chuyển hướng đến trang thanh toán mới
+            return redirect('booking:payment_page', order_id=booking.order_id)
             
         except Exception as e:
             logger.error(f"Error in booking: {str(e)}")
@@ -502,6 +535,112 @@ def send_cancellation_email(booking):
         logger.error(f"Lỗi khi gửi email: {str(e)}")
         raise
 
+@login_required
+def payment_page(request, order_id):
+    """Trang thanh toán cho đơn hàng"""
+    try:
+        # Lấy đơn hàng từ cơ sở dữ liệu
+        booking = Booking.objects.get(order_id=order_id)
+        
+        # Kiểm tra thời hạn thanh toán (mặc định 24 giờ)
+        time_limit = 24 * 60 * 60  # 24 giờ (tính bằng giây)
+        time_elapsed = timezone.now() - booking.booking_date
+        time_left = time_limit - time_elapsed.total_seconds()
+        
+        if time_left <= 0 or booking.payment_status == 'Paid':
+            # Nếu hết hạn hoặc đã thanh toán, chuyển đến trang thông tin vé
+            return redirect('booking:ticket_detail', booking_id=booking.id)
+            
+        # Định dạng số tiền và lấy thông tin sự kiện
+        event = booking.event
+        session = booking.session
+        amount = int(booking.total_price)
+        
+        context = {
+            'booking': booking,
+            'event': event,
+            'session': session,
+            'amount': amount,
+            'time_left': int(time_left),
+            'bank_info': {
+                'bank_id': 'MB',
+                'account_no': '0372192004',
+                'account_name': 'PHAM NGOC THANG',
+            }
+        }
+        return render(request, 'booking/payment_page.html', context)
+        
+    except Booking.DoesNotExist:
+        # Đơn hàng không tồn tại, chuyển về trang chủ
+        messages.error(request, 'Đơn hàng không tồn tại hoặc đã hết hạn')
+        return redirect('home')
+
+@require_POST
+def check_payment_status(request, order_id):
+    try:
+        booking = Booking.objects.get(order_id=order_id)
+        
+        # Gọi API kiểm tra thanh toán (API Google Script)
+        try:
+            response = requests.get("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgoLTHR8gClvB88gMGcQC12gsT0kaEQCoS4WUlBNL7G9Dy_8Q7WtBxAdKhHI35-BcFQABPhsSLVQMx9U6pBNkXE6jvsAVMrmBtOCWMBKyz4QUwAymLqymwO6BQ_CY6nlaZLOUydtLxn-e3XybovSiQTDr3Ynoa7thda_t27gsyfdTKXBX8jzbLEoj5JwI9U_eghtujEz9oXLjZYXZnleccrRKaI6VGWMoCg0iSp8PNaMhpuOC7jzxAhq9dNDOlbgFTNAcGs-b1M31E9dY0Yez7dQsmSYA&lib=MWuHXdWJZSnyKlpuiurKQl8V0hm-3jR3L")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Kiểm tra nếu có dữ liệu giao dịch
+                if data.get("data") and isinstance(data["data"], list) and len(data["data"]) > 0:
+                    # Lấy giao dịch mới nhất
+                    for transaction in reversed(data["data"]):
+                        transaction_desc = transaction.get("Mô tả", "")
+                        transaction_amount = transaction.get("Giá trị", 0)
+                        
+                        # Kiểm tra nếu mô tả chứa order_id
+                        if order_id in transaction_desc and transaction_amount >= booking.total_price:
+                            # Cập nhật trạng thái thanh toán
+                            booking.payment_status = 'Paid'
+                            booking.payment_date = timezone.now()
+                            booking.save()
+                            
+                            # Cập nhật số lượng vé còn lại
+                            ticket_type = booking.ticket_type
+                            if ticket_type and ticket_type.available_quantity >= booking.quantity:
+                                ticket_type.available_quantity -= booking.quantity
+                                ticket_type.save()
+                            
+                            # Gửi email xác nhận nếu cần
+                            try:
+                                from .utils import send_booking_confirmation_email
+                                send_booking_confirmation_email(booking)
+                            except Exception as e:
+                                logger.error(f"Không thể gửi email xác nhận: {str(e)}")
+                            
+                            # Tạo URL redirect
+                            redirect_url = reverse('booking:ticket_detail', args=[booking.id])
+                            
+                            return JsonResponse({
+                                'paid': True,
+                                'redirect_url': redirect_url
+                            })
+        except Exception as e:
+            logger.error(f"Lỗi khi kiểm tra API thanh toán: {str(e)}")
+        
+        # Nếu không tìm thấy giao dịch hoặc có lỗi, kiểm tra database
+        if booking.payment_status == 'Paid':
+            redirect_url = reverse('booking:ticket_detail', args=[booking.id])
+            return JsonResponse({
+                'paid': True,
+                'redirect_url': redirect_url
+            })
+        else:
+            return JsonResponse({
+                'paid': False
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'paid': False,
+            'error': str(e)
+        })
 
 
 

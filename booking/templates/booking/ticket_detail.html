@@ -8,184 +8,185 @@
 <div class="container my-5">
     <div class="row">
         <div class="col-lg-8 mx-auto">
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Trang chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}">Vé của tôi</a></li>
-                    <li class="breadcrumb-item active">Chi tiết vé</li>
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-light p-2 rounded">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}" class="text-decoration-none text-primary">Vé của tôi</a></li>
+                    <li class="breadcrumb-item active text-muted" aria-current="page">Chi tiết vé</li>
                 </ol>
             </nav>
-            
-            <div class="card shadow">
-                <!-- Header với thông tin cơ bản -->
-                <div class="card-header text-center bg-primary text-white p-3">
-                    <h4 class="mb-0">{{ event.title }}</h4>
-                    <p class="mb-0">{{ session.start_time|date:"H:i, l d/m/Y" }}</p>
+
+            <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+                <!-- Header với thông tin cơ bản - Light Theme -->
+                <div class="card-header text-center bg-light border-bottom p-4">
+                    <h3 class="mb-1 text-dark">{{ event.title }}</h3>
+                    <p class="mb-0 text-muted">{{ session.start_time|date:"H:i, l d/m/Y" }}</p>
                 </div>
-                
+
                 {% if booking.payment_status == 'Cancelled' %}
-                <div class="alert alert-danger border-0 rounded-0 mb-0 text-center">
-                    <h5 class="mb-0">Vé đã bị hủy</h5>
+                <div class="alert alert-warning border-0 rounded-0 mb-0 text-center p-3">
+                    <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Vé đã bị hủy</h5>
                 </div>
                 {% endif %}
-                
-                <div class="card-body">
+
+                <div class="card-body p-4 p-md-5">
                     <!-- Thông tin đặt vé -->
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5 class="border-bottom pb-2 mb-3">Thông tin đặt vé</h5>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Mã đơn hàng:</div>
-                                <div class="col-md-8"><code>{{ booking.order_id }}</code></div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Người đặt:</div>
-                                <div class="col-md-8">{{ booking.name }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Email:</div>
-                                <div class="col-md-8">{{ booking.email }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Số điện thoại:</div>
-                                <div class="col-md-8">{{ booking.phone }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Thời gian đặt vé:</div>
-                                <div class="col-md-8">{{ booking.booking_date|date:"H:i, d/m/Y" }}</div>
-                            </div>
+                    <div class="mb-5">
+                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin đặt vé</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Mã đơn hàng:</div>
+                            <div class="col-sm-8"><code class="bg-light p-1 rounded">{{ booking.order_id }}</code></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Người đặt:</div>
+                            <div class="col-sm-8">{{ booking.name }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Email:</div>
+                            <div class="col-sm-8">{{ booking.email }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Số điện thoại:</div>
+                            <div class="col-sm-8">{{ booking.phone }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Thời gian đặt vé:</div>
+                            <div class="col-sm-8">{{ booking.booking_date|date:"H:i, d/m/Y" }}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Thông tin vé -->
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5 class="border-bottom pb-2 mb-3">Thông tin vé</h5>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Loại vé:</div>
-                                <div class="col-md-8">{{ booking.ticket_type.name }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Số lượng:</div>
-                                <div class="col-md-8">{{ booking.quantity }} vé</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Đơn giá:</div>
-                                <div class="col-md-8">{{ booking.ticket_type.price|floatformat:0|intcomma }}đ / vé</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Tổng tiền:</div>
-                                <div class="col-md-8 fw-bold text-success">{{ booking.total_price|floatformat:0|intcomma }}đ</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Trạng thái:</div>
-                                <div class="col-md-8">
-                                    {% if booking.payment_status == 'Paid' %}
-                                    <span class="badge bg-success">Đã thanh toán</span>
-                                    {% elif booking.payment_status == 'Pending' %}
-                                    <span class="badge bg-warning">Đang chờ thanh toán</span>
-                                    {% elif booking.payment_status == 'Cancelled' %}
-                                    <span class="badge bg-danger">Đã hủy</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">{{ booking.get_payment_status_display }}</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            {% if booking.payment_date %}
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Thời gian thanh toán:</div>
-                                <div class="col-md-8">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if booking.payment_status == 'Cancelled' %}
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Thời gian hủy:</div>
-                                <div class="col-md-8">{{ booking.cancelled_at|date:"H:i, d/m/Y" }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Số tiền hoàn lại:</div>
-                                <div class="col-md-8">{{ booking.refund_amount|floatformat:0|intcomma }}đ</div>
-                            </div>
-                            {% if booking.cancel_reason %}
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Lý do hủy:</div>
-                                <div class="col-md-8">{{ booking.cancel_reason }}</div>
-                            </div>
-                            {% endif %}
-                            {% endif %}
+                    <div class="mb-5">
+                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin vé</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Loại vé:</div>
+                            <div class="col-sm-8">{{ booking.ticket_type.name }}</div>
                         </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Số lượng:</div>
+                            <div class="col-sm-8">{{ booking.quantity }} vé</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Đơn giá:</div>
+                            <div class="col-sm-8">{{ booking.ticket_type.price|floatformat:0|intcomma }}đ / vé</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Tổng tiền:</div>
+                            <div class="col-sm-8 fw-bold text-success fs-5">{{ booking.total_price|floatformat:0|intcomma }}đ</div>
+                        </div>
+                        <div class="row mb-2 align-items-center">
+                            <div class="col-sm-4 text-muted">Trạng thái:</div>
+                            <div class="col-sm-8">
+                                {% if booking.payment_status == 'Paid' %}
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-1 fs-6">
+                                    <i class="bi bi-check-circle me-1"></i> Đã thanh toán
+                                </span>
+                                {% elif booking.payment_status == 'Pending' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1 fs-6">
+                                    <i class="bi bi-clock me-1"></i> Chờ thanh toán
+                                </span>
+                                {% elif booking.payment_status == 'Cancelled' %}
+                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fs-6">
+                                    <i class="bi bi-x-circle me-1"></i> Đã hủy
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle rounded-pill px-3 py-1 fs-6">
+                                    {{ booking.get_payment_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if booking.payment_date %}
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Thời gian thanh toán:</div>
+                            <div class="col-sm-8">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if booking.payment_status == 'Cancelled' %}
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Thời gian hủy:</div>
+                            <div class="col-sm-8">{{ booking.cancelled_at|date:"H:i, d/m/Y" }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Số tiền hoàn lại:</div>
+                            <div class="col-sm-8">{{ booking.refund_amount|floatformat:0|intcomma }}đ</div>
+                        </div>
+                        {% if booking.cancel_reason %}
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Lý do hủy:</div>
+                            <div class="col-sm-8">{{ booking.cancel_reason }}</div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
-                    
+
                     <!-- Thông tin sự kiện -->
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h5 class="border-bottom pb-2 mb-3">Thông tin sự kiện</h5>
-                            
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Tên sự kiện:</div>
-                                <div class="col-md-8">{{ event.title }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Địa điểm:</div>
-                                <div class="col-md-8">{{ event.location }}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 fw-bold">Thời gian:</div>
-                                <div class="col-md-8">
-                                    {% if session.start_time.date == session.end_time.date %}
-                                        {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"l, d/m/Y" }}
-                                    {% else %}
-                                        {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
-                                    {% endif %}
-                                </div>
+                    <div class="mb-5">
+                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin sự kiện</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Tên sự kiện:</div>
+                            <div class="col-sm-8">{{ event.title }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Địa điểm:</div>
+                            <div class="col-sm-8">{{ event.location }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted">Thời gian:</div>
+                            <div class="col-sm-8">
+                                {% if session.start_time.date == session.end_time.date %}
+                                    {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"l, d/m/Y" }}
+                                {% else %}
+                                    {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Mã QR -->
                     {% if booking.payment_status == 'Paid' %}
-                    <div class="row justify-content-center mb-4">
+                    <div class="row justify-content-center mb-5">
                         <div class="col-md-8 text-center">
-                            <h5 class="mb-3">Mã QR vé của bạn</h5>
-                            <div class="qr-code-container mb-3">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ booking.order_id }}" alt="QR code vé" class="img-fluid">
-                            </div>
+                            <h5 class="mb-3 text-primary">Mã QR vé của bạn</h5>
+                            <div class="qr-code-container mb-3 p-3 bg-white d-inline-block rounded-lg shadow-sm">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data={{ booking.order_id }}&qzone=1" alt="QR code vé" class="img-fluid">
+                            </div>pp
                             <p class="text-muted small">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <!-- Các nút thao tác -->
                     <div class="row">
                         <div class="col-md-12 text-center">
-                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-secondary me-2">
-                                <i class="bi bi-arrow-left"></i> Quay lại
+                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-secondary rounded-pill px-4 me-2">
+                                <i class="bi bi-arrow-left me-1"></i> Quay lại
                             </a>
-                            
+
                             {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-                            <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-danger">
-                                <i class="bi bi-x-circle"></i> Hủy vé
+                            <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-outline-danger rounded-pill px-4">
+                                <i class="bi bi-x-circle me-1"></i> Hủy vé
                             </a>
                             {% elif booking.payment_status == 'Pending' %}
-                            <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-primary">
-                                <i class="bi bi-credit-card"></i> Thanh toán
+                            <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-credit-card me-1"></i> Thanh toán ngay
                             </a>
                             {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-            <div class="alert alert-info mt-3">
-                <h6 class="mb-2"><i class="bi bi-info-circle"></i> Chính sách hủy vé</h6>
-                <ul class="mb-0 small">
-                    <li>Vé chỉ có thể hủy trước khi sự kiện diễn ra ít nhất 3 ngày</li>
-                    <li>Hoàn tiền 80% nếu hủy vé trước sự kiện từ 7 ngày trở lên</li>
-                    <li>Hoàn tiền 50% nếu hủy vé trước sự kiện từ 3-7 ngày</li>
-                    <li>Không hoàn tiền nếu hủy trong vòng 3 ngày trước sự kiện</li>
+            <div class="alert alert-info mt-4 border-info border-start border-5 rounded-end">
+                <h6 class="mb-2 text-info"><i class="bi bi-info-circle-fill me-2"></i> Chính sách hủy vé</h6>
+                <ul class="mb-0 small text-muted ps-3">
+                    <li>Vé chỉ có thể hủy trước khi sự kiện diễn ra ít nhất <strong>3 ngày</strong></li>
+                    <li>Hoàn tiền <strong>80%</strong> nếu hủy vé trước sự kiện từ <strong>7 ngày</strong> trở lên</li>
+                    <li>Hoàn tiền <strong>50%</strong> nếu hủy vé trước sự kiện từ <strong>3-7 ngày</strong></li>
+                    <li>Không hoàn tiền nếu hủy trong vòng <strong>3 ngày</strong> trước sự kiện</li>
                 </ul>
             </div>
             {% endif %}
@@ -196,12 +197,29 @@
 
 {% block extra_css %}
 <style>
-    .qr-code-container {
-        display: inline-block;
-        background-color: white;
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    body {
+        background-color: #f8f9fa; /* Light gray background for the whole page */
+    }
+    .card {
+        background-color: #ffffff; /* Ensure card background is white */
+    }
+    .breadcrumb {
+        font-size: 0.9rem;
+    }
+    .text-muted {
+        color: #6c757d !important; /* Slightly darker muted text */
+    }
+    .badge {
+        font-weight: 500;
+    }
+    .qr-code-container img {
+        display: block; /* Prevent extra space below image */
+    }
+    .alert-info {
+        background-color: #e6f7ff; /* Lighter info alert */
+    }
+    .alert-warning {
+        background-color: #fffbe6; /* Lighter warning alert */
     }
 </style>
 {% endblock %}
