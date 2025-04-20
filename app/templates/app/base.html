@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        
         /* ===== Variables ===== */
         :root {
             --primary-color: rgb(45, 194, 117);
@@ -511,6 +512,192 @@
                 height: 30px;
             }
         }
+
+        /* ===== Footer Styles ===== */
+        .footer {
+            background-color: #212529;
+            color: #f8f9fa;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .footer-top {
+            background-color: #212529;
+            padding: 3rem 0 2rem;
+        }
+
+        .footer-bottom {
+            background-color: #1a1e21;
+        }
+
+        .footer-brand p {
+            color: #adb5bd;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .footer-heading {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: #f8f9fa;
+            position: relative;
+        }
+
+        .footer-heading::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-block;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        .footer-contact {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-contact li {
+            margin-bottom: 0.75rem;
+            display: flex;
+            color: #adb5bd;
+        }
+
+        .footer-contact li i {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-right: 12px;
+            min-width: 16px;
+            display: flex;
+            justify-content: center;
+            margin-top: 3px;
+        }
+
+        .footer-contact a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-contact a:hover {
+            color: var(--primary-color);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(45, 194, 117, 0.2);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-divider {
+            margin: 0.5rem 0 1.5rem;
+            border-color: #343a40;
+            opacity: 0.5;
+        }
+
+        .footer-bottom p {
+            margin-bottom: 0.5rem;
+            color: #adb5bd;
+        }
+
+        .footer-bottom a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        /* Responsive Footer */
+        @media (max-width: 768px) {
+            .footer-top {
+                padding: 2rem 0 1rem;
+                text-align: center;
+            }
+            
+            .footer-heading::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+            
+            .footer-contact li {
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .footer-links a:hover {
+                transform: none;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -642,9 +829,75 @@
     </div>
     
     <!-- Footer -->
-    <footer class="bg-dark text-light py-3 container-fluid mt-5">
-        <div class="text-center">
-            <p class="mb-0">&copy; 2025 Ticketbox. All rights reserved.</p>
+    <footer class="footer mt-5">
+        <div class="footer-top py-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                        <div class="footer-brand">
+                            <a href="{% url 'home' %}">
+                                <img src="{% static 'app/images/logo.png' %}" alt="MyTicket Logo" class="footer-logo img-fluid" style="max-height: 50px;">
+                            </a>
+                            <p class="mt-3">Hệ thống đặt vé sự kiện trực tuyến tại Việt Nam. Chúng tôi mang đến trải nghiệm đặt vé thuận tiện, an toàn và thông minh.</p>
+                            <div class="social-links mt-3">
+                                <a href="https://facebook.com" target="_blank" class="social-link"><i class="bi bi-facebook"></i></a>
+                                <a href="https://instagram.com" target="_blank" class="social-link"><i class="bi bi-instagram"></i></a>
+                                <a href="https://github.com/thangkh02/MyTicket" target="_blank" class="social-link"><i class="bi bi-github"></i></a>
+                                <a href="mailto:pnthangkth@gmail.com" class="social-link"><i class="bi bi-envelope" ></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h5 class="footer-heading">Khám phá</h5>
+                        <ul class="footer-links">
+                            <li><a href="{% url 'home' %}?category=concert">Âm nhạc</a></li>
+                            <li><a href="{% url 'home' %}?category=theater">Sân khấu & Nghệ thuật</a></li>
+                            <li><a href="{% url 'home' %}?category=sports">Thể thao</a></li>
+                            <li><a href="{% url 'home' %}?category=other">Sự kiện khác</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h5 class="footer-heading">Tài khoản</h5>
+                        <ul class="footer-links">
+                            {% if user.is_authenticated %}
+                            <li><a href="{% url 'profile' %}">Hồ sơ của tôi</a></li>
+                            <li><a href="{% url 'booking:my_tickets' %}">Vé của tôi</a></li>
+                            <li><a href="{% url 'profile' %}?tab=tickets">Sự kiện của tôi</a></li>
+                            <li><a href="{% url 'logout' %}">Đăng xuất</a></li>
+                            {% else %}
+                            <li><a href="{% url 'login' %}">Đăng nhập</a></li>
+                            <li><a href="{% url 'register' %}">Đăng ký</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-heading">Liên hệ</h5>
+                        <ul class="footer-contact">
+                            <li><i class="bi bi-geo-alt" ></i> Học viện Công nghệ Bưu chính Viễn thông </li>
+                            <li><i class="bi bi-envelope"></i> <a href="mailto:pnthangkth@gmail.com"> pnthangkth@gmail.com</a></li>
+                            <li><i class="bi bi-telephone"></i> <a href="tel:0372192004">0372192004</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom py-3">
+            <div class="container text-center">
+                <hr class="footer-divider">
+                <p>© 2025 Ticketbox. All rights reserved.</p>
+                <p>Built by Phạm Ngọc Thắng – PTIT</p>
+                <p>
+                    <a href="https://github.com/thangkh02/MyTicket" target="_blank" >
+                        <i class="bi bi-github"></i> Source code on GitHub
+                    </a> •
+                    <a href="mailto:pnthangkth@gmail.com">
+                        <i class="bi bi-envelope"></i> pnthangkth@gmail.com
+                    </a> •
+                    <a href="#top">
+                        Back to top
+                    </a>
+                </p>
+            </div>
         </div>
     </footer>
     
