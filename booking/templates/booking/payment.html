@@ -1,0 +1,606 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Thanh toán - {{ event.title }} - MyTicket{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Thanh toán đặt vé</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Thông tin đơn hàng</h5>
+                        <p class="mb-0">Mã đơn hàng: <strong>{{ order_id }}</strong></p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Thông tin sự kiện</h5>
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>{{ event.title }}</strong></p>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar-event text-success me-1"></i> 
+                                    {% if session.start_time.date == session.end_time.date %}
+                                        {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"d/m/Y" }}
+                                    {% else %}
+                                        {{ session.start_time|date:"H:i d/m/Y" }} - {{ session.end_time|date:"H:i d/m/Y" }}
+                                    {% endif %}
+                                </p>
+                                <p class="mb-1"><i class="bi bi-geo-alt text-success me-1"></i> {{ event.location }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Thông tin vé</h5>
+                            <div class="mb-3">
+                                <p class="mb-1">{{ booking.ticket_type.name }}</p>
+                                <p class="mb-1">Số lượng: {{ booking.quantity }} vé</p>
+                                <p class="mb-1">Giá: {{ booking.ticket_type.price|floatformat:0|intcomma }}đ/vé</p>
+                                <p class="mb-1 fw-bold text-success">Tổng cộng: {{ booking.total_price|floatformat:0|intcomma }}đ</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="mb-3">Phương thức thanh toán</h5>
+                            
+                            <div class="payment-method active" id="bank-transfer">
+                                <div class="payment-header d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment" id="bank" checked>
+                                        <label class="form-check-label" for="bank">
+                                            <span class="fw-bold">Chuyển khoản ngân hàng</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="payment-body mt-3 ps-4">
+                                    <p>Quét mã QR bên dưới để thanh toán:</p>
+                                    <div class="text-center mb-3">
+                                        <form id="booking-form" method="post" action="{% url 'booking:complete_booking_no_id' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" id="order-id-input" name="order_id" value="{{ order_id }}">
+                                            <button type="button" id="continue-btn" class="btn btn-success mb-3">
+                                                Thanh toán ngay
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thanh toán -->
+<div id="payment-modal" class="payment-modal" style="display: none;">
+  <div class="payment-modal-content">
+    <div class="payment-modal-body">
+      <div class="payment-status-pending">
+        <div class="qr-container">
+          <img src="" alt="QR Code thanh toán" class="qr_code">
+        </div>
+        <div class="payment-title">
+          Mã QR thanh toán tự động
+        </div>
+        <div class="payment-subtitle">
+          (Xác nhận tự động - Thường không quá 3')
+        </div>
+        <div class="payment-info">
+          <p class="payment-amount">Số tiền: <span id="modal-amount"></span></p>
+          <p class="payment-content">Nội dung (bắt buộc): <span id="modal-order-id" class="highlight"></span></p>
+          <p class="payment-recipient">Người thụ hưởng: <span id="modal-recipient">PHAM NGOC THANG</span></p>
+        </div>
+        <div class="payment-timer-container">
+          <div class="payment-timer-text">
+            <span>Đang chờ thanh toán</span>
+            <span id="countdown-timer">10:00</span>
+          </div>
+          <div class="payment-progress-bar">
+            <div class="payment-progress-fill" id="timer-progress"></div>
+          </div>
+        </div>
+      </div>
+      <div class="payment-status-expired" style="display: none;">
+        <div class="expired-icon">
+          <i class="bi bi-exclamation-circle"></i>
+        </div>
+        <h3>Phiên thanh toán đã hết hạn</h3>
+        <p>Thời gian thanh toán đã hết. Vui lòng thử lại.</p>
+        <button class="close-expired-btn">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-method {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-method.active {
+        border-color: #28a745;
+        box-shadow: 0 0 0 1px #28a745;
+    }
+    
+    .payment-instructions {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+    }
+    
+    .bank-info {
+        background-color: #f0f8ff;
+        border-radius: 6px;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+    }
+
+    /* QR Modal Styling */
+    .payment-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .payment-modal-content {
+        background-color: #2b2d42;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 380px;
+        overflow: hidden;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .payment-modal-body {
+        padding: 0;
+    }
+    
+    .qr-container {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .qr_code {
+        width: 240px;
+        height: 240px;
+        background-color: white;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    .payment-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        color: #ffc107;
+        margin-bottom: 5px;
+    }
+    
+    .payment-subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #ffffff;
+        margin-bottom: 15px;
+    }
+    
+    .payment-info {
+        padding: 0 20px;
+        margin-bottom: 15px;
+    }
+    
+    .payment-amount, .payment-content, .payment-recipient {
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    
+    .highlight {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    
+    .payment-timer-container {
+        padding: 15px 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .payment-timer-text {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    
+    .payment-progress-bar {
+        height: 8px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .payment-progress-fill {
+        height: 100%;
+        background-color: #ffc107;
+        width: 100%;
+        border-radius: 4px;
+        transition: width 1s linear;
+    }
+    
+    .payment-status-expired {
+        text-align: center;
+        padding: 30px 20px;
+    }
+    
+    .expired-icon {
+        font-size: 48px;
+        color: #dc3545;
+        margin-bottom: 15px;
+    }
+    
+    .close-expired-btn {
+        padding: 10px 20px;
+        background-color: #2dc275;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 500;
+        margin-top: 20px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Biến toàn cục và cố định trên window object 
+    window.isSuccess = false;
+    
+    const continueBtn = document.getElementById('continue-btn');
+    const paymentModal = document.getElementById('payment-modal');
+    const pendingStatus = document.querySelector('.payment-status-pending');
+    const expiredStatus = document.querySelector('.payment-status-expired');
+    const closeExpiredBtn = document.querySelector('.close-expired-btn');
+    const countdownTimer = document.getElementById('countdown-timer');
+    const timerProgress = document.getElementById('timer-progress');
+    const modalAmount = document.getElementById('modal-amount');
+    const modalOrderId = document.getElementById('modal-order-id');
+    const qr_code = document.querySelector('.qr_code');
+    
+    // Thông tin thanh toán
+    const totalPrice = "{{ booking.total_price|floatformat:0|intcomma }}";
+    const orderId = "{{ order_id }}";
+    
+    // Thời gian hết hạn (10 phút = 600 giây)
+    const expirationTime = 10 * 60;
+    let timeLeft = expirationTime;
+    
+    // Hàm định dạng thời gian (MM:SS)
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Hàm cập nhật đồng hồ đếm ngược
+    function updateTimer() {
+      timeLeft--;
+      
+      if (timeLeft <= 0) {
+        clearInterval(window.timerInterval);
+        pendingStatus.style.display = 'none';
+        expiredStatus.style.display = 'block';
+        return;
+      }
+      
+      // Cập nhật hiển thị thời gian
+      countdownTimer.textContent = formatTime(timeLeft);
+      
+      // Cập nhật thanh tiến trình
+      const progressPercentage = (timeLeft / expirationTime) * 100;
+      timerProgress.style.width = `${progressPercentage}%`;
+    }
+
+    let myBank = {
+      BANK_ID : 'MB',
+      ACCOUNT_NO : '0372192004',
+    }
+    
+    // Hàm xử lý khi thanh toán thành công
+    function handlePaymentSuccess() {
+      // Đánh dấu đã thanh toán thành công
+      window.isSuccess = true;
+      
+      // Dừng tất cả các interval
+      if (window.checkInterval) {
+        clearInterval(window.checkInterval);
+        window.checkInterval = null;
+      }
+      
+      if (window.timerInterval) {
+        clearInterval(window.timerInterval);
+        window.timerInterval = null;
+      }
+      
+      console.log("Thanh toán thành công - Đã dừng kiểm tra");
+      
+      // Lấy order_id để gọi API
+      const orderId = document.getElementById('modal-order-id').textContent;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      
+      console.log("Gọi API cập nhật trạng thái thanh toán với order_id:", orderId);
+      
+      // Gọi API verify_payment để cập nhật trạng thái thanh toán và số lượng vé
+      fetch('/booking/verify-payment/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrfToken
+        },
+        body: `order_id=${orderId}`
+      })
+      .then(response => {
+        console.log("API Response Status:", response.status);
+        if (!response.ok) {
+          return response.text().then(text => {
+            console.error("API Error Details:", text);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Kết quả từ API verify_payment:", data);
+        
+        // Ẩn giao diện đang chờ
+        pendingStatus.style.display = 'none';
+        
+        // Hiển thị giao diện thành công
+        const successHTML = `
+          <div class="payment-status-success" style="text-align:center; padding:30px 20px;">
+            <div style="font-size:48px; color:#28a745; margin-bottom:15px;">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h3>Thanh toán thành công</h3>
+            <p>Cảm ơn bạn đã đặt vé. Vé của bạn đã được xác nhận.</p>
+            <button type="button" id="complete-button" 
+              style="background-color:#28a745; color:white; border:none; 
+              padding:10px 20px; border-radius:30px; margin-top:20px; cursor:pointer;">
+              Hoàn tất đặt vé
+            </button>
+          </div>
+        `;
+        
+        document.querySelector('.payment-modal-body').insertAdjacentHTML('beforeend', successHTML);
+        
+        // Thêm event listener cho nút hoàn tất
+        setTimeout(() => {
+          const completeButton = document.getElementById('complete-button');
+          if (completeButton) {
+            completeButton.addEventListener('click', function() {
+              if (data.success && data.redirect_url) {
+                // Nếu API trả về URL chuyển hướng, dùng URL đó
+                window.location.href = data.redirect_url;
+              } else {
+                // Nếu không, submit form như cũ
+                document.getElementById('booking-form').submit();
+              }
+            });
+          }
+        }, 100);
+      })
+      .catch(error => {
+        console.error("Lỗi khi gọi API verify_payment:", error);
+        
+        // Vẫn hiển thị UI thành công, nhưng submit form thay vì chuyển hướng
+        pendingStatus.style.display = 'none';
+        const successHTML = `
+          <div class="payment-status-success" style="text-align:center; padding:30px 20px;">
+            <div style="font-size:48px; color:#28a745; margin-bottom:15px;">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h3>Thanh toán thành công</h3>
+            <p>Cảm ơn bạn đã đặt vé. Vé của bạn đã được xác nhận.</p>
+            <button type="button" id="complete-button" 
+              style="background-color:#28a745; color:white; border:none; 
+              padding:10px 20px; border-radius:30px; margin-top:20px; cursor:pointer;">
+              Hoàn tất đặt vé
+            </button>
+          </div>
+        `;
+        
+        document.querySelector('.payment-modal-body').insertAdjacentHTML('beforeend', successHTML);
+        
+        // Thêm event listener cho nút hoàn tất
+        setTimeout(() => {
+          const completeButton = document.getElementById('complete-button');
+          if (completeButton) {
+            completeButton.addEventListener('click', function() {
+              document.getElementById('booking-form').submit();
+            });
+          }
+        }, 100);
+      });
+    }
+    
+    // Hàm kiểm tra thanh toán
+    async function checkPaid(price, orderId) {
+      // Nếu đã thanh toán thành công, thoát khỏi hàm ngay lập tức
+      if (window.isSuccess === true) {
+        console.log("Đã thanh toán thành công, bỏ qua kiểm tra");
+        return;
+      }
+      
+      console.log("Đang kiểm tra thanh toán...");
+      
+      try {
+        const response = await fetch(
+          "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgoLTHR8gClvB88gMGcQC12gsT0kaEQCoS4WUlBNL7G9Dy_8Q7WtBxAdKhHI35-BcFQABPhsSLVQMx9U6pBNkXE6jvsAVMrmBtOCWMBKyz4QUwAymLqymwO6BQ_CY6nlaZLOUydtLxn-e3XybovSiQTDr3Ynoa7thda_t27gsyfdTKXBX8jzbLEoj5JwI9U_eghtujEz9oXLjZYXZnleccrRKaI6VGWMoCg0iSp8PNaMhpuOC7jzxAhq9dNDOlbgFTNAcGs-b1M31E9dY0Yez7dQsmSYA&lib=MWuHXdWJZSnyKlpuiurKQl8V0hm-3jR3L"
+        );
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const lastPaid = data.data[data.data.length - 1];
+        const lastPrice = lastPaid["Giá trị"];
+        const lastOrderId = lastPaid["Mô tả"];
+        
+        if (lastPrice == price && lastOrderId.includes(orderId)) {
+          // Chỉ xử lý thành công nếu chưa được đánh dấu là thành công
+          if (window.isSuccess === false) {
+            handlePaymentSuccess();
+          }
+        } else {
+          console.log("Chưa thanh toán");
+        }
+      } catch(error) {
+        console.error("Lỗi kết nối đến server thanh toán:", error);
+      }
+    }
+    
+    if (continueBtn) {
+      continueBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Reset trạng thái
+        window.isSuccess = false;
+        
+        // Hủy các interval cũ
+        if (window.checkInterval) {
+          clearInterval(window.checkInterval);
+          window.checkInterval = null;
+        }
+        
+        if (window.timerInterval) {
+          clearInterval(window.timerInterval);
+          window.timerInterval = null;
+        }
+        
+        // Xóa thông tin thành công nếu có
+        const successElement = document.querySelector('.payment-status-success');
+        if (successElement) {
+          successElement.remove();
+        }
+        
+        paymentModal.style.display = 'flex';
+        pendingStatus.style.display = 'block';
+        
+        // Cập nhật thông tin thanh toán
+        const price = parseInt(totalPrice.replace(/[^\d]/g, ''));
+        modalAmount.textContent = totalPrice;
+        modalOrderId.textContent = orderId;
+
+        let QR = `https://img.vietqr.io/image/${myBank.BANK_ID}-${myBank.ACCOUNT_NO}-qr_only.png?amount=${price}&addInfo=${orderId}`;
+        qr_code.src = QR;
+        
+        // Thiết lập interval kiểm tra thanh toán - sau 15 giây
+        setTimeout(() => {
+          if (!window.isSuccess) {
+            window.checkInterval = setInterval(() => {
+              if (!window.isSuccess) {
+                checkPaid(price, orderId);
+              } else {
+                // Nếu đã thành công, dừng interval
+                clearInterval(window.checkInterval);
+                window.checkInterval = null;
+              }
+            }, 3000);
+          }
+        }, 15000);
+        
+        // Reset và bắt đầu đồng hồ đếm ngược
+        timeLeft = expirationTime;
+        countdownTimer.textContent = formatTime(timeLeft);
+        timerProgress.style.width = '100%';
+        
+        window.timerInterval = setInterval(updateTimer, 1000);
+      });
+    }
+    
+    // Đóng modal khi nhấn nút đóng sau khi hết hạn
+    if (closeExpiredBtn) {
+      closeExpiredBtn.addEventListener('click', function() {
+        paymentModal.style.display = 'none';
+        
+        // Dừng tất cả các interval
+        if (window.checkInterval) {
+          clearInterval(window.checkInterval);
+          window.checkInterval = null;
+        }
+        
+        if (window.timerInterval) {
+          clearInterval(window.timerInterval);
+          window.timerInterval = null;
+        }
+        
+        // Reset modal để lần sau hiển thị lại trạng thái thanh toán
+        setTimeout(function() {
+          pendingStatus.style.display = 'block';
+          expiredStatus.style.display = 'none';
+          
+          // Xóa thông tin thành công nếu có
+          const successElement = document.querySelector('.payment-status-success');
+          if (successElement) {
+            successElement.remove();
+          }
+        }, 500);
+      });
+    }
+    
+    // Đóng modal khi nhấn bên ngoài
+    window.addEventListener('click', function(event) {
+      if (event.target === paymentModal) {
+        paymentModal.style.display = 'none';
+        
+        // Dừng tất cả các interval
+        if (window.checkInterval) {
+          clearInterval(window.checkInterval);
+          window.checkInterval = null;
+        }
+        
+        if (window.timerInterval) {
+          clearInterval(window.timerInterval);
+          window.timerInterval = null;
+        }
+    
+        setTimeout(function() {
+          pendingStatus.style.display = 'block';
+          expiredStatus.style.display = 'none';
+          
+          // Xóa thông tin thành công nếu có
+          const successElement = document.querySelector('.payment-status-success');
+          if (successElement) {
+            successElement.remove();
+          }
+        }, 500);
+      }
+    });
+  });
+</script>
+{% endblock %}

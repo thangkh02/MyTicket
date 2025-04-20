@@ -5,7 +5,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from app.models import Event, EventSession, TicketType
-from .models import Booking
+from .models import Booking, BookingItem
 import json
 import logging
 import hashlib
@@ -118,7 +118,10 @@ def book_ticket(request, event_id):
                     session=session,
                     booking_date=timezone.now(),
                     payment_status='Pending',
-                    order_id=order_id
+                    order_id=order_id,
+                    name=request.POST.get('name', ''),
+                    email=request.POST.get('email', ''),
+                    phone=request.POST.get('phone', '')
                 )
                 booking.save()
                 logger.info(f"Đã tạo booking mới với order_id: {order_id}")
@@ -127,21 +130,40 @@ def book_ticket(request, event_id):
             if booking.payment_status == 'Paid':
                 return redirect('booking:complete_booking', booking_id=booking.id)
             
-            # Lưu chi tiết vé được đặt nếu là đơn hàng mới hoặc chưa có thông tin vé
-            if booking.ticket_type is None:
-                total_amount = 0
-                total_quantity = 0
-                
-                # Hiện tại chỉ hỗ trợ một loại vé cho mỗi đơn hàng
-                for ticket_id, quantity in selected_tickets.items():
+            # Lưu chi tiết các loại vé được đặt
+            # Xóa các booking item cũ nếu là đơn hàng cũ
+            booking.booking_items.all().delete()
+            
+            total_amount = 0
+            total_quantity = 0
+            
+            # Lưu từng loại vé vào booking_items
+            for ticket_id, quantity in selected_tickets.items():
+                if int(quantity) > 0:
                     ticket_type = get_object_or_404(TicketType, pk=ticket_id)
-                    booking.ticket_type = ticket_type
-                    booking.quantity = int(quantity)
-                    total_amount += ticket_type.price * int(quantity)
-                    total_quantity += int(quantity)
-                
-                booking.total_price = total_amount
-                booking.save()
+                    quantity = int(quantity)
+                    
+                    # Tạo booking item mới
+                    booking_item = BookingItem(
+                        booking=booking,
+                        ticket_type=ticket_type,
+                        quantity=quantity,
+                        unit_price=ticket_type.price,
+                        subtotal=ticket_type.price * quantity
+                    )
+                    booking_item.save()
+                    
+                    total_amount += ticket_type.price * quantity
+                    total_quantity += quantity
+            
+            # Cho tương thích ngược, lưu loại vé đầu tiên vào booking nếu có
+            if booking.booking_items.exists():
+                first_item = booking.booking_items.first()
+                booking.ticket_type = first_item.ticket_type
+                booking.quantity = first_item.quantity
+            
+            booking.total_price = total_amount
+            booking.save()
             
             # Chuyển hướng đến trang thanh toán mới
             return redirect('booking:payment_page', order_id=booking.order_id)
@@ -192,11 +214,32 @@ def create_booking(request, event_id):
             
             # Lưu chi tiết vé
             total_amount = 0
+            total_quantity = 0
+            
+            # Lưu từng loại vé vào booking_items
             for ticket_id, quantity in selected_tickets.items():
-                ticket_type = get_object_or_404(TicketType, pk=ticket_id)
-                booking.ticket_type = ticket_type
-                booking.quantity = int(quantity)
-                total_amount += ticket_type.price * int(quantity)
+                if int(quantity) > 0:
+                    ticket_type = get_object_or_404(TicketType, pk=ticket_id)
+                    quantity = int(quantity)
+                    
+                    # Tạo booking item mới
+                    booking_item = BookingItem(
+                        booking=booking,
+                        ticket_type=ticket_type,
+                        quantity=quantity,
+                        unit_price=ticket_type.price,
+                        subtotal=ticket_type.price * quantity
+                    )
+                    booking_item.save()
+                    
+                    total_amount += ticket_type.price * quantity
+                    total_quantity += quantity
+            
+            # Cho tương thích ngược, lưu loại vé đầu tiên vào booking nếu có
+            if booking.booking_items.exists():
+                first_item = booking.booking_items.first()
+                booking.ticket_type = first_item.ticket_type
+                booking.quantity = first_item.quantity
             
             booking.total_price = total_amount
             booking.save()
@@ -293,11 +336,21 @@ def verify_payment(request):
         booking.payment_date = timezone.now()
         booking.save()
         
-        # Cập nhật số lượng vé còn lại
-        ticket_type = booking.ticket_type
-        if ticket_type and ticket_type.available_quantity >= booking.quantity:
-            ticket_type.available_quantity -= booking.quantity
-            ticket_type.save()
+        # Cập nhật số lượng vé còn lại cho tất cả các booking items
+        for booking_item in booking.booking_items.all():
+            ticket_type = booking_item.ticket_type
+            if ticket_type and ticket_type.available_quantity >= booking_item.quantity:
+                ticket_type.available_quantity -= booking_item.quantity
+                ticket_type.save()
+                logger.info(f"Đã giảm {booking_item.quantity} vé loại {ticket_type.name} - còn lại: {ticket_type.available_quantity}")
+        
+        # Tương thích ngược với mô hình cũ - giảm số lượng nếu không có booking items
+        if not booking.booking_items.exists() and booking.ticket_type:
+            ticket_type = booking.ticket_type
+            if ticket_type.available_quantity >= booking.quantity:
+                ticket_type.available_quantity -= booking.quantity
+                ticket_type.save()
+                logger.info(f"Tương thích ngược: Đã giảm {booking.quantity} vé loại {ticket_type.name} - còn lại: {ticket_type.available_quantity}")
         
         # Gửi email xác nhận đơn hàng
         try:
@@ -460,11 +513,18 @@ def cancel_ticket(request, booking_id):
             booking.save()
             
             # Hoàn trả số lượng vé vào hệ thống
-            if booking.ticket_type:
-                booking.ticket_type.quantity += booking.quantity
+            for booking_item in booking.booking_items.all():
+                ticket_type = booking_item.ticket_type
+                if ticket_type:
+                    ticket_type.available_quantity += booking_item.quantity
+                    ticket_type.save()
+                    logger.info(f"Đã hoàn trả {booking_item.quantity} vé loại {ticket_type.name} vào hệ thống")
+            
+            # Tương thích ngược - hoàn trả vé nếu không có booking items
+            if not booking.booking_items.exists() and booking.ticket_type:
+                booking.ticket_type.available_quantity += booking.quantity
                 booking.ticket_type.save()
-                
-                logger.info(f"Đã hoàn trả {booking.quantity} vé loại {booking.ticket_type.name} vào hệ thống")
+                logger.info(f"Tương thích ngược: Đã hoàn trả {booking.quantity} vé loại {booking.ticket_type.name} vào hệ thống")
             
             # Gửi email thông báo hủy vé
             try:
@@ -547,8 +607,20 @@ def payment_page(request, order_id):
         time_elapsed = timezone.now() - booking.booking_date
         time_left = time_limit - time_elapsed.total_seconds()
         
-        if time_left <= 0 or booking.payment_status == 'Paid':
-            # Nếu hết hạn hoặc đã thanh toán, chuyển đến trang thông tin vé
+        # Kiểm tra nếu đã hết hạn và đang ở trạng thái Pending
+        if time_left <= 0 and booking.payment_status == 'Pending':
+            # Cập nhật trạng thái sang Cancelled
+            booking.payment_status = 'Cancelled'
+            booking.cancelled_at = timezone.now()
+            booking.cancel_reason = "Tự động hủy - quá 24h chưa thanh toán"
+            booking.save()
+            
+            logger.info(f"Đã tự động hủy đơn hàng hết hạn: {booking.order_id} (ID: {booking.id})")
+            messages.warning(request, "Đơn hàng đã bị hủy do quá thời gian thanh toán (24 giờ).")
+            return redirect('booking:ticket_detail', booking_id=booking.id)
+            
+        if booking.payment_status == 'Paid':
+            # Nếu đã thanh toán, chuyển đến trang thông tin vé
             return redirect('booking:ticket_detail', booking_id=booking.id)
             
         # Định dạng số tiền và lấy thông tin sự kiện
@@ -601,21 +673,29 @@ def check_payment_status(request, order_id):
                             booking.payment_date = timezone.now()
                             booking.save()
                             
-                            # Cập nhật số lượng vé còn lại
-                            ticket_type = booking.ticket_type
-                            if ticket_type and ticket_type.available_quantity >= booking.quantity:
-                                ticket_type.available_quantity -= booking.quantity
-                                ticket_type.save()
+                            # Cập nhật số lượng vé còn lại cho tất cả các booking items
+                            for booking_item in booking.booking_items.all():
+                                ticket_type = booking_item.ticket_type
+                                if ticket_type and ticket_type.available_quantity >= booking_item.quantity:
+                                    ticket_type.available_quantity -= booking_item.quantity
+                                    ticket_type.save()
+                                    logger.info(f"Đã giảm {booking_item.quantity} vé loại {ticket_type.name} - còn lại: {ticket_type.available_quantity}")
+                            
+                            # Tương thích ngược - cập nhật nếu không có booking items
+                            if not booking.booking_items.exists() and booking.ticket_type:
+                                ticket_type = booking.ticket_type
+                                if ticket_type and ticket_type.available_quantity >= booking.quantity:
+                                    ticket_type.available_quantity -= booking.quantity
+                                    ticket_type.save()
                             
                             # Gửi email xác nhận nếu cần
                             try:
-                                from .utils import send_booking_confirmation_email
                                 send_booking_confirmation_email(booking)
                             except Exception as e:
                                 logger.error(f"Không thể gửi email xác nhận: {str(e)}")
                             
                             # Tạo URL redirect
-                            redirect_url = reverse('booking:ticket_detail', args=[booking.id])
+                            redirect_url = reverse('booking:complete_booking', args=[booking.id])
                             
                             return JsonResponse({
                                 'paid': True,
@@ -626,7 +706,7 @@ def check_payment_status(request, order_id):
         
         # Nếu không tìm thấy giao dịch hoặc có lỗi, kiểm tra database
         if booking.payment_status == 'Paid':
-            redirect_url = reverse('booking:ticket_detail', args=[booking.id])
+            redirect_url = reverse('booking:complete_booking', args=[booking.id])
             return JsonResponse({
                 'paid': True,
                 'redirect_url': redirect_url
@@ -641,6 +721,102 @@ def check_payment_status(request, order_id):
             'paid': False,
             'error': str(e)
         })
+
+@login_required
+def cancel_pending_booking(request, booking_id):
+    """Xử lý yêu cầu hủy đơn hàng chưa thanh toán"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    
+    # Kiểm tra quyền truy cập (chỉ owner mới được hủy)
+    if booking.user != request.user:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Bạn không có quyền hủy đơn hàng này.'}, status=403)
+        messages.error(request, "Bạn không có quyền hủy đơn hàng này.")
+        return redirect('booking:my_tickets')
+    
+    # Kiểm tra xem đơn hàng có đang trong trạng thái chờ thanh toán không
+    if booking.payment_status != 'Pending':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Chỉ có thể hủy đơn hàng đang chờ thanh toán.'}, status=400)
+        messages.error(request, "Chỉ có thể hủy đơn hàng đang chờ thanh toán.")
+        return redirect('booking:my_tickets')
+    
+    try:
+        # Cập nhật trạng thái hủy đơn hàng
+        booking.payment_status = 'Cancelled'
+        booking.cancelled_at = timezone.now()
+        booking.cancel_reason = "Hủy bởi người dùng - chưa thanh toán"
+        booking.save()
+        
+        # Log thông tin
+        logger.info(f"Đã hủy đơn hàng chưa thanh toán: {booking.order_id} bởi user: {request.user.username}")
+        
+        # Trả về kết quả cho AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Đơn hàng đã được hủy thành công.',
+                'booking_id': booking.id
+            })
+        
+        # Hiển thị thông báo và chuyển hướng nếu không phải AJAX request
+        messages.success(request, "Đơn hàng đã được hủy thành công.")
+        return redirect('booking:my_tickets')
+            
+    except Exception as e:
+        logger.error(f"Lỗi khi hủy đơn hàng: {str(e)}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': f'Có lỗi xảy ra: {str(e)}'}, status=500)
+            
+        messages.error(request, f"Có lỗi xảy ra: {str(e)}")
+        return redirect('booking:my_tickets')
+
+@login_required
+def delete_booking(request, booking_id):
+    """Xử lý yêu cầu xóa đơn hàng đã hủy khỏi lịch sử"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    
+    # Kiểm tra quyền truy cập (chỉ owner mới được xóa)
+    if booking.user != request.user:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Bạn không có quyền xóa đơn hàng này.'}, status=403)
+        messages.error(request, "Bạn không có quyền xóa đơn hàng này.")
+        return redirect('booking:my_tickets')
+    
+    # Kiểm tra xem đơn hàng có phải là đã hủy không
+    if booking.payment_status not in ['Cancelled', 'Refunded']:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Chỉ có thể xóa các đơn hàng đã hủy.'}, status=400)
+        messages.error(request, "Chỉ có thể xóa các đơn hàng đã hủy.")
+        return redirect('booking:my_tickets')
+    
+    try:
+        # Xóa booking (và các booking items liên quan thông qua CASCADE)
+        booking.delete()
+        
+        # Log thông tin
+        logger.info(f"Đã xóa đơn hàng {booking_id} bởi user: {request.user.username}")
+        
+        # Trả về kết quả cho AJAX request
+        if request.method == 'DELETE' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Đơn hàng đã được xóa thành công.'
+            }, status=204)  # 204 No Content - Xóa thành công
+        
+        # Hiển thị thông báo và chuyển hướng nếu không phải AJAX request
+        messages.success(request, "Đơn hàng đã được xóa thành công.")
+        return redirect('booking:my_tickets')
+            
+    except Exception as e:
+        logger.error(f"Lỗi khi xóa đơn hàng: {str(e)}")
+        
+        if request.method == 'DELETE' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': f'Có lỗi xảy ra: {str(e)}'}, status=500)
+            
+        messages.error(request, f"Có lỗi xảy ra: {str(e)}")
+        return redirect('booking:my_tickets')
 
 
 

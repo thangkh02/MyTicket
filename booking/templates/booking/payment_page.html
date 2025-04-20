@@ -405,15 +405,24 @@
         <div class="payment-card">
           <div class="order-summary-title">Thông tin đơn hàng</div>
           
-          <div class="order-row">
-            <div class="order-label">{{ booking.ticket_type.name }}</div>
-            <div class="order-value">{{ booking.quantity }} vé</div>
-          </div>
-          
-          <div class="order-row">
-            <div class="order-label">Giá vé</div>
-            <div class="order-value">{{ booking.ticket_type.price|floatformat:0|intcomma }} đ/vé</div>
-          </div>
+          {% if booking.booking_items.all %}
+            {% for item in booking.booking_items.all %}
+            <div class="order-row">
+              <div class="order-label">{{ item.ticket_type.name }}</div>
+              <div class="order-value">{{ item.quantity }} vé x {{ item.unit_price|floatformat:0|intcomma }} đ</div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="order-row">
+              <div class="order-label">{{ booking.ticket_type.name }}</div>
+              <div class="order-value">{{ booking.quantity }} vé</div>
+            </div>
+            
+            <div class="order-row">
+              <div class="order-label">Giá vé</div>
+              <div class="order-value">{{ booking.ticket_type.price|floatformat:0|intcomma }} đ/vé</div>
+            </div>
+          {% endif %}
           
           <div class="order-row order-total">
             <div class="order-label">Tổng tiền</div>

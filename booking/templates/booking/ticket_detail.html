@@ -9,33 +9,38 @@
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb bg-light p-2 rounded">
-                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Trang chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}" class="text-decoration-none text-primary">Vé của tôi</a></li>
+                <ol class="breadcrumb bg-white p-2 rounded shadow-sm">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}" class="text-decoration-none">Vé của tôi</a></li>
                     <li class="breadcrumb-item active text-muted" aria-current="page">Chi tiết vé</li>
                 </ol>
             </nav>
 
             <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-                <!-- Header với thông tin cơ bản - Light Theme -->
-                <div class="card-header text-center bg-light border-bottom p-4">
-                    <h3 class="mb-1 text-dark">{{ event.title }}</h3>
+                <!-- Header với thông tin cơ bản -->
+                <div class="card-header text-center bg-white border-bottom p-4">
+                    <h3 class="mb-1 fw-bold text-dark">{{ event.title }}</h3>
                     <p class="mb-0 text-muted">{{ session.start_time|date:"H:i, l d/m/Y" }}</p>
                 </div>
 
                 {% if booking.payment_status == 'Cancelled' %}
-                <div class="alert alert-warning border-0 rounded-0 mb-0 text-center p-3">
+                <div class="alert alert-light border-0 rounded-0 mb-0 text-center p-3 border-start border-danger border-4">
                     <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Vé đã bị hủy</h5>
                 </div>
                 {% endif %}
 
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-4 p-md-5 bg-white">
                     <!-- Thông tin đặt vé -->
                     <div class="mb-5">
-                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin đặt vé</h5>
+                        <div class="ticket-section-header mb-4">
+                            <div class="section-icon me-2">
+                                <i class="bi bi-person text-primary"></i>
+                            </div>
+                            <h5 class="section-title">Thông tin đặt vé</h5>
+                        </div>
                         <div class="row mb-2">
                             <div class="col-sm-4 text-muted">Mã đơn hàng:</div>
-                            <div class="col-sm-8"><code class="bg-light p-1 rounded">{{ booking.order_id }}</code></div>
+                            <div class="col-sm-8"><span class="order-code">{{ booking.order_id }}</span></div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-sm-4 text-muted">Người đặt:</div>
@@ -57,7 +62,38 @@
 
                     <!-- Thông tin vé -->
                     <div class="mb-5">
-                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin vé</h5>
+                        <div class="ticket-section-header mb-4">
+                            <div class="section-icon me-2">
+                                <i class="bi bi-ticket-perforated text-primary"></i>
+                            </div>
+                            <h5 class="section-title">Thông tin vé</h5>
+                        </div>
+                        
+                        {% if booking.booking_items.all %}
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Loại vé</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in booking.booking_items.all %}
+                                    <tr>
+                                        <td>{{ item.ticket_type.name }}</td>
+                                        <td class="text-center">{{ item.quantity }} vé</td>
+                                        <td class="text-end">{{ item.unit_price|floatformat:0|intcomma }}đ</td>
+                                        <td class="text-end">{{ item.subtotal|floatformat:0|intcomma }}đ</td>
+                                    {% endfor %}
+                                    <tr class="table-light">
+                                        <td colspan="3" class="fw-bold text-end">Tổng tiền</td>
+                                        <td class="fw-bold text-success text-end fs-5">{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {% else %}
                         <div class="row mb-2">
                             <div class="col-sm-4 text-muted">Loại vé:</div>
                             <div class="col-sm-8">{{ booking.ticket_type.name }}</div>
@@ -74,6 +110,8 @@
                             <div class="col-sm-4 text-muted">Tổng tiền:</div>
                             <div class="col-sm-8 fw-bold text-success fs-5">{{ booking.total_price|floatformat:0|intcomma }}đ</div>
                         </div>
+                        {% endif %}
+                        
                         <div class="row mb-2 align-items-center">
                             <div class="col-sm-4 text-muted">Trạng thái:</div>
                             <div class="col-sm-8">
@@ -103,28 +141,16 @@
                             <div class="col-sm-8">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
                         </div>
                         {% endif %}
-
-                        {% if booking.payment_status == 'Cancelled' %}
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Thời gian hủy:</div>
-                            <div class="col-sm-8">{{ booking.cancelled_at|date:"H:i, d/m/Y" }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Số tiền hoàn lại:</div>
-                            <div class="col-sm-8">{{ booking.refund_amount|floatformat:0|intcomma }}đ</div>
-                        </div>
-                        {% if booking.cancel_reason %}
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Lý do hủy:</div>
-                            <div class="col-sm-8">{{ booking.cancel_reason }}</div>
-                        </div>
-                        {% endif %}
-                        {% endif %}
                     </div>
 
                     <!-- Thông tin sự kiện -->
                     <div class="mb-5">
-                        <h5 class="text-primary border-bottom border-primary pb-2 mb-4 d-inline-block">Thông tin sự kiện</h5>
+                        <div class="ticket-section-header mb-4">
+                            <div class="section-icon me-2">
+                                <i class="bi bi-calendar-event text-primary"></i>
+                            </div>
+                            <h5 class="section-title">Thông tin sự kiện</h5>
+                        </div>
                         <div class="row mb-2">
                             <div class="col-sm-4 text-muted">Tên sự kiện:</div>
                             <div class="col-sm-8">{{ event.title }}</div>
@@ -149,10 +175,15 @@
                     {% if booking.payment_status == 'Paid' %}
                     <div class="row justify-content-center mb-5">
                         <div class="col-md-8 text-center">
-                            <h5 class="mb-3 text-primary">Mã QR vé của bạn</h5>
-                            <div class="qr-code-container mb-3 p-3 bg-white d-inline-block rounded-lg shadow-sm">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data={{ booking.order_id }}&qzone=1" alt="QR code vé" class="img-fluid">
-                            </div>pp
+                            <div class="ticket-section-header mb-3 justify-content-center">
+                                <div class="section-icon me-2">
+                                    <i class="bi bi-qr-code text-primary"></i>
+                                </div>
+                                <h5 class="section-title">Mã QR vé của bạn</h5>
+                            </div>
+                            <div class="qr-code-container mb-3 p-4 bg-white d-inline-block rounded-3 shadow-sm">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&bạndata={{ booking.order_id }}&qzone=1" alt="QR code vé" class="img-fluid">
+                            </div>
                             <p class="text-muted small">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
                         </div>
                     </div>
@@ -161,16 +192,16 @@
                     <!-- Các nút thao tác -->
                     <div class="row">
                         <div class="col-md-12 text-center">
-                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-secondary rounded-pill px-4 me-2">
+                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-secondary px-4 py-2 me-2">
                                 <i class="bi bi-arrow-left me-1"></i> Quay lại
                             </a>
 
                             {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-                            <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-outline-danger rounded-pill px-4">
+                            <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-outline-danger px-4 py-2">
                                 <i class="bi bi-x-circle me-1"></i> Hủy vé
                             </a>
                             {% elif booking.payment_status == 'Pending' %}
-                            <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-primary rounded-pill px-4">
+                            <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-primary px-4 py-2">
                                 <i class="bi bi-credit-card me-1"></i> Thanh toán ngay
                             </a>
                             {% endif %}
@@ -180,14 +211,21 @@
             </div>
 
             {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-            <div class="alert alert-info mt-4 border-info border-start border-5 rounded-end">
-                <h6 class="mb-2 text-info"><i class="bi bi-info-circle-fill me-2"></i> Chính sách hủy vé</h6>
-                <ul class="mb-0 small text-muted ps-3">
-                    <li>Vé chỉ có thể hủy trước khi sự kiện diễn ra ít nhất <strong>3 ngày</strong></li>
-                    <li>Hoàn tiền <strong>80%</strong> nếu hủy vé trước sự kiện từ <strong>7 ngày</strong> trở lên</li>
-                    <li>Hoàn tiền <strong>50%</strong> nếu hủy vé trước sự kiện từ <strong>3-7 ngày</strong></li>
-                    <li>Không hoàn tiền nếu hủy trong vòng <strong>3 ngày</strong> trước sự kiện</li>
-                </ul>
+            <div class="alert alert-light mt-4 border-info border-start border-4 shadow-sm rounded">
+                <div class="d-flex">
+                    <div class="section-icon blue-icon me-3 align-self-start mt-1">
+                        <i class="bi bi-info-circle text-info"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-2 fw-bold text-dark">Chính sách hủy vé</h6>
+                        <ul class="mb-0 small text-muted ps-3">
+                            <li>Vé chỉ có thể hủy trước khi sự kiện diễn ra ít nhất <strong>3 ngày</strong></li>
+                            <li>Hoàn tiền <strong>80%</strong> nếu hủy vé trước sự kiện từ <strong>7 ngày</strong> trở lên</li>
+                            <li>Hoàn tiền <strong>50%</strong> nếu hủy vé trước sự kiện từ <strong>3-7 ngày</strong></li>
+                            <li>Không hoàn tiền nếu hủy trong vòng <strong>3 ngày</strong> trước sự kiện</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             {% endif %}
         </div>
@@ -197,29 +235,144 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary-color: #00ad54;
+        --primary-light: #e9f7f1;
+        --secondary-color: #4a90e2;
+        --light-bg: #f8f9fa;
+        --border-radius: 8px;
+        --box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
     body {
-        background-color: #f8f9fa; /* Light gray background for the whole page */
+        background-color: #f8f9fa;
+        color: #333;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+    
+    /* Card styling - WHITE background */
     .card {
-        background-color: #ffffff; /* Ensure card background is white */
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+        background-color: #ffffff !important;
+        box-shadow: var(--box-shadow);
     }
+    
+    .card-header {
+        background-color: #ffffff !important;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    /* Section headers design */
+    .ticket-section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+        margin: 0;
+        font-weight: 700;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    /* Icon styling - với màu sắc từ ảnh */
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(0, 173, 84, 0.1);
+    }
+    
+    .blue-icon {
+        background-color: rgba(74, 144, 226, 0.1);
+    }
+    
+    .section-icon i {
+        font-size: 18px;
+    }
+    
+    /* Order code styling */
+    .order-code {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    /* Button styling */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background-color: #009548;
+        border-color: #009548;
+        box-shadow: 0 2px 5px rgba(0, 173, 84, 0.3);
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .qr-code-container {
+        transition: transform 0.3s ease;
+    }
+    
+    .qr-code-container:hover {
+        transform: scale(1.03);
+    }
+    
+    .qr-code-container img {
+        display: block;
+    }
+    
+    /* Breadcrumb styling */
     .breadcrumb {
         font-size: 0.9rem;
+        transition: all 0.3s ease;
     }
-    .text-muted {
-        color: #6c757d !important; /* Slightly darker muted text */
+    
+    .breadcrumb-item a {
+        color: var(--primary-color);
     }
-    .badge {
-        font-weight: 500;
+    
+    .breadcrumb-item.active {
+        color: #6c757d;
     }
-    .qr-code-container img {
-        display: block; /* Prevent extra space below image */
-    }
-    .alert-info {
-        background-color: #e6f7ff; /* Lighter info alert */
-    }
-    .alert-warning {
-        background-color: #fffbe6; /* Lighter warning alert */
+    
+    /* Alert styling */
+    .alert {
+        background-color: #ffffff;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hiệu ứng loading kết thúc sau khi trang tải xong
+        setTimeout(() => {
+            const loadingBar = document.querySelector('.loading-animation');
+            if (loadingBar) {
+                loadingBar.style.opacity = '0';
+                setTimeout(() => {
+                    loadingBar.style.display = 'none';
+                }, 300);
+            }
+        }, 800);
+    });
+</script>
 {% endblock %}
