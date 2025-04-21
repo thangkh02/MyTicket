@@ -473,6 +473,35 @@ def my_tickets(request):
             upcoming_events.append(booking)
         else:
             past_events.append(booking)
+
+    # Nhóm các đơn hàng sắp diễn ra theo sự kiện
+    upcoming_events_grouped = {}
+    for booking in upcoming_events:
+        event_id = booking.event.id
+        if event_id not in upcoming_events_grouped:
+            upcoming_events_grouped[event_id] = {
+                'event': booking.event,
+                'bookings': [],
+                'total_tickets': 0,  # Khởi tạo số vé
+                'total_orders': 0    # Khởi tạo số đơn hàng
+            }
+        
+        # Thêm booking vào danh sách bookings của sự kiện
+        upcoming_events_grouped[event_id]['bookings'].append(booking)
+        upcoming_events_grouped[event_id]['total_orders'] += 1
+        
+        # Cộng dồn số lượng vé
+        if hasattr(booking, 'get_total_quantity'):
+            total_qty = booking.get_total_quantity
+            if total_qty is not None:
+                upcoming_events_grouped[event_id]['total_tickets'] += total_qty
+            else:
+                upcoming_events_grouped[event_id]['total_tickets'] += booking.quantity
+        else:
+            upcoming_events_grouped[event_id]['total_tickets'] += booking.quantity
+    
+    # Chuyển từ dict sang list để dễ dàng duyệt trong template
+    upcoming_events_grouped = list(upcoming_events_grouped.values())
     
     context = {
         'paid_bookings': paid_bookings,
@@ -480,6 +509,7 @@ def my_tickets(request):
         'cancelled_bookings': cancelled_bookings,
         'upcoming_events': upcoming_events,
         'past_events': past_events,
+        'upcoming_events_grouped': upcoming_events_grouped,
     }
     
     return render(request, 'booking/my_tickets.html', context)

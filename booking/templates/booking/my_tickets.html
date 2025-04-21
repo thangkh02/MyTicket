@@ -811,6 +811,287 @@
         text-align: center;
         margin-bottom: 0.5rem;
     }
+
+    /* CSS cho giao diện nhóm theo sự kiện */
+    .event-group {
+        background-color: var(--card);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .event-group:hover {
+        box-shadow: var(--shadow-md);
+    }
+    
+    .event-header {
+        padding: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .event-header:hover {
+        background-color: rgba(45, 194, 117, 0.05);
+    }
+    
+    .event-header-content {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+    
+    .event-image {
+        width: 120px;
+        height: 67.5px; /* Tỷ lệ 16:9 */
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+        background-color: #f1f1f1;
+        border: 1px solid var(--border);
+    }
+    
+    .event-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .event-image:hover img {
+        transform: scale(1.05);
+    }
+    
+    .event-info {
+        flex: 1;
+    }
+    
+    .event-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+        color: var(--foreground);
+    }
+    
+    .event-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .event-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+    }
+    
+    .event-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--primary);
+        margin-left: auto;
+        padding: 0.375rem 0.75rem;
+        background-color: rgba(45, 194, 117, 0.1);
+        border-radius: 99px;
+    }
+    
+    .event-dropdown-icon {
+        transition: transform 0.3s ease;
+        font-size: 1rem;
+        margin-left: 0.25rem;
+    }
+    
+    [data-bs-toggle="collapse"][aria-expanded="true"] .event-dropdown-icon {
+        transform: rotate(180deg);
+    }
+    
+    .orders-list {
+        padding: 1rem;
+        background-color: #f9fafb;
+        border-top: 1px solid var(--border);
+    }
+    
+    .order-item {
+        background-color: white;
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0,0,0,0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .order-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .order-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: var(--primary);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .order-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+    
+    .order-item:hover::before {
+        opacity: 1;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px dashed var(--border);
+    }
+    
+    .order-id {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        color: var(--foreground);
+    }
+    
+    .order-id i {
+        color: var(--primary);
+    }
+    
+    .order-date {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    
+    .order-date i {
+        font-size: 0.875rem;
+        color: var(--muted);
+    }
+    
+    .order-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .order-tickets {
+        flex: 1;
+    }
+    
+    .ticket-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: var(--foreground);
+        margin-bottom: 0.25rem;
+        padding: 0.25rem 0;
+        justify-content: space-between;
+    }
+    
+    .ticket-item i {
+        color: #f59e0b;
+        font-size: 0.875rem;
+    }
+    
+    .ticket-item-info {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    
+    .ticket-item-price {
+        font-weight: 700;
+        color: var(--foreground);
+    }
+    
+    .ticket-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .order-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    
+    .order-actions .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .order-actions .btn i {
+        font-size: 0.875rem;
+    }
+    
+    .order-actions .btn-outline:hover {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    
+    @media (max-width: 768px) {
+        .event-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .event-image {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+            margin-bottom: 0.75rem;
+        }
+        
+        .event-summary {
+            margin-left: 0;
+            margin-top: 0.75rem;
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .order-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .order-actions {
+            margin-left: 0;
+            margin-top: 0.75rem;
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -951,7 +1232,7 @@
                 <div class="alert alert-warning" style = "margin: 1rem 0rem 1rem "; >
                     <i class="bi bi-exclamation-triangle"></i>
                     <div>
-                        <p>Vé chưa thanh toán sẽ tự động hủy sau 24 giờ kể từ thời điểm đặt vé.</p>
+                        <p>Đơn chưa thanh toán sẽ tự động hủy sau 24 giờ kể từ thời điểm đặt vé.</p>
                     </div>
                 </div>
 
@@ -1070,98 +1351,94 @@
 
         <!-- Tab Sắp diễn ra -->
         <div class="tab-panel" id="upcoming-tab" role="tabpanel" style="margin-top: 1rem;">
-            {% if upcoming_events %}
-                <div class="tickets-grid">
-                    {% for booking in upcoming_events %}
-                    <article class="ticket-card" data-order-id="{{ booking.order_id }}">
-                        <div class="ticket-badge badge-upcoming">Sắp diễn ra</div>
-                        <div class="ticket-image">
-                            {% if booking.event.image %}
-                                <img src="{{ booking.event.image.url }}" alt="{{ booking.event.title }}">
-                            {% endif %}
-                            <div class="ticket-overlay"></div>
-                        </div>
-                        <div class="ticket-content">
-                            <h3 class="ticket-title">{{ booking.event.title }}</h3>
-                            <div class="ticket-meta">
-                                <div class="ticket-meta-item">
-                                    <i class="bi bi-upc-scan"></i>
-                                    <span>{{ booking.order_id }}</span>
-                                </div>
-                                <div class="ticket-meta-item">
-                                    <i class="bi bi-calendar-check"></i>
-                                    <span>{{ booking.booking_date|date:"d/m/Y (H:i)" }}</span>
-                                </div>
-                            </div>
-
-                            <div class="ticket-divider"></div>
-
-                            <div class="ticket-details">
-                                <div class="ticket-details-header" data-bs-toggle="collapse" data-bs-target="#ticketDetails-{{ booking.id }}" aria-expanded="false">
-                                    <h4 class="ticket-detail-title">
-                                        <span>Chi tiết vé </span>
-                                        <i class="bi bi-chevron-down"></i>
-                                    </h4>
-                                </div>
-                                <div id="ticketDetails-{{ booking.id }}" class="collapse ticket-details-content">
-                                    {% if booking.booking_items.all %}
-                                        {% for item in booking.booking_items.all %}
-                                            <div class="ticket-type-row">
-                                                <div class="flex gap-1">
-                                                    <i class="bi bi-ticket-perforated"></i>
-                                                    <span>{{ item.ticket_type.name }} x{{ item.quantity }}</span>
-                                                </div>
-                                                <span class="ticket-type-price">{{ item.unit_price|floatformat:0|intcomma }}đ</span>
-                                            </div>
-                                        {% endfor %}
+            {% if upcoming_events_grouped %}
+                {% for event_data in upcoming_events_grouped %}
+                    <div class="event-group">
+                        <div class="event-header" data-bs-toggle="collapse" data-bs-target="#event-{{ event_data.event.id }}" aria-expanded="false">
+                            <div class="event-header-content">
+                                <div class="event-image">
+                                    {% if event_data.event.image %}
+                                        <img src="{{ event_data.event.image.url }}" alt="{{ event_data.event.title }}">
                                     {% else %}
-                                        <div class="ticket-type-row">
-                                            <div class="flex gap-1">
-                                                <i class="bi bi-ticket-perforated"></i>
-                                                <span>{{ booking.ticket_type.name }} x{{ booking.quantity }}</span>
-                                            </div>
-                                            <span class="ticket-type-price">{{ booking.ticket_type.price|floatformat:0|intcomma }}đ</span>
-                                        </div>
+                                        <div class="no-image-placeholder"></div>
                                     {% endif %}
                                 </div>
-
-                            </div>
-                            <div class="ticket-summary">
-                                <div class="ticket-total-row">
-                                    <div class="ticket-total-label">
-    
-                                        <span>Tổng tiền :</span>
-                                        <span> </span>
+                                <div class="event-info">
+                                    <h3 class="event-title">{{ event_data.event.title }}</h3>
+                                    <div class="event-meta">
+                                        {% with first_booking=event_data.bookings.0 %}
+                                            <div class="event-meta-item">
+                                                <i class="bi bi-calendar"></i>
+                                                <span>{{ first_booking.session.start_time|date:"d/m/Y" }}</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="bi bi-clock"></i>
+                                                <span>{{ first_booking.session.start_time|date:"H:i" }}</span>
+                                            </div>
+                                            <div class="event-meta-item">
+                                                <i class="bi bi-geo-alt"></i>
+                                                <span>{{ event_data.event.location }}</span>
+                                            </div>
+                                        {% endwith %}
                                     </div>
-                                    <span class="ticket-total-amount">{{ booking.total_price|floatformat:0|intcomma }}đ</span>
+                                </div>
+                                <div class="event-summary">
+                                    <span>Sắp diễn ra • {{ event_data.total_orders }} đơn • {{ event_data.total_tickets }} vé</span>
+                                    <i class="bi bi-chevron-down event-dropdown-icon"></i>
                                 </div>
                             </div>
-                            <div class="ticket-footer">
-                                <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-outline">
-                                    <i class="bi bi-info-circle"></i>
-                                    Chi tiết
-                                </a>
-                                <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-primary">
-                                    
-                                    Chi tiết
-                                </a>
+                        </div>
+                        <div id="event-{{ event_data.event.id }}" class="collapse">
+                            <div class="orders-list">
+                                {% for booking in event_data.bookings %}
+                                    <div class="order-item">
+                                        <div class="order-header">
+                                            <div class="order-id">
+                                                <i class="bi bi-receipt"></i>
+                                                <span>{{ booking.order_id }}</span>
+                                            </div>
+                                            <div class="order-date">
+                                                <i class="bi bi-credit-card"></i>
+                                                <span>Thanh toán {{ booking.payment_date|date:"d/m/Y" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="order-content">
+                                            {% if booking.booking_items.all %}
+                                                <div class="order-tickets">
+                                                    {% for item in booking.booking_items.all %}
+                                                        <div class="ticket-item">
+                                                            <div class="ticket-item-info">
+                                                                <span>{{ item.quantity }}× {{ item.ticket_type.name }}</span>
+                                                            </div>
+                                                            <span class="ticket-item-price">{{ item.unit_price|floatformat:0|intcomma }}₫</span>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="order-tickets">
+                                                    <div class="ticket-item">
+                                                        <div class="ticket-item-info">
+                                                            <span>{{ booking.quantity }}× {{ booking.ticket_type.name }}</span>
+                                                        </div>
+                                                        <span class="ticket-item-price">{{ booking.ticket_type.price|floatformat:0|intcomma }}₫</span>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="order-actions">
+                                                <a href="{% url 'booking:ticket_detail' booking.id %}" class="btn btn-sm btn-outline">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    Xem hóa đơn
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
-                    </article>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    {% with booking.booking_items.all as items %}
-    {% with total=0 %}
-        {% for item in items %}
-            {% with total=total|add:item.quantity %}
-            {% endwith %}
-        {% endfor %}
-        <span>{{ total }} vé</span>
-    {% endwith %}
-{% endwith %}
-
                     <p class="empty-text">Bạn không có vé nào cho sự kiện sắp diễn ra</p>
                     <a href="{% url 'home' %}" class="btn btn-primary">
                         <i class="bi bi-calendar-event"></i>
