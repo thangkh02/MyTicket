@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from app.models import Event, TicketType, EventSession
+import uuid
 
 class Booking(models.Model):
     PAYMENT_STATUS_CHOICES = [
@@ -89,3 +90,42 @@ class BookingItem(models.Model):
         # Tự động tính thành tiền
         self.subtotal = self.unit_price * self.quantity
         super().save(*args, **kwargs)
+
+
+class Ticket(models.Model):
+    """
+    Model để lưu trữ thông tin của từng vé cụ thể trong đơn hàng
+    """
+    booking_item = models.ForeignKey(BookingItem, on_delete=models.CASCADE, related_name='tickets')
+    ticket_code = models.CharField(max_length=20, unique=True)
+    is_used = models.BooleanField(default=False)
+    check_in_time = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.ticket_code
+    
+    @staticmethod
+    def generate_ticket_code():
+        """Tạo mã vé duy nhất với định dạng cải tiến"""
+        import uuid
+        import time
+        from datetime import datetime
+        
+        # Tạo tiền tố dựa trên ngày hiện tại (định dạng: YYMM)
+        date_prefix = datetime.now().strftime('%y%m')
+        
+        # Tạo hậu tố ngẫu nhiên (8 ký tự)
+        random_suffix = uuid.uuid4().hex[:8].upper()
+        
+        # Tạo mã vé với định dạng: TIX-YYMM-XXXXXXXX
+        ticket_code = f"TIX-{date_prefix}-{random_suffix}"
+        
+        # Kiểm tra xem mã đã tồn tại trong database chưa
+        while Ticket.objects.filter(ticket_code=ticket_code).exists():
+            # Nếu đã tồn tại, tạo mã mới
+            time.sleep(0.01)  # Tạm dừng để đảm bảo mã mới khác với mã cũ
+            random_suffix = uuid.uuid4().hex[:8].upper()
+            ticket_code = f"TIX-{date_prefix}-{random_suffix}"
+        
+        return ticket_code

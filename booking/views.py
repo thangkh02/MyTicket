@@ -40,6 +40,27 @@ def generate_order_id(event_id, user_id):
     print(f"Generated order_id: {order_id}")
     return order_id
 
+def create_tickets_for_booking_item(booking_item):
+    """Tạo mã vé riêng biệt cho từng vé trong booking item"""
+    from .models import Ticket
+    
+    # Xóa các vé cũ nếu có
+    booking_item.tickets.all().delete()
+    
+    # Tạo vé mới cho mỗi sản phẩm trong booking item
+    tickets_created = []
+    for i in range(booking_item.quantity):
+        ticket = Ticket(
+            booking_item=booking_item,
+            ticket_code=Ticket.generate_ticket_code(),
+            is_used=False
+        )
+        ticket.save()
+        tickets_created.append(ticket)
+    
+    logger.info(f"Đã tạo {len(tickets_created)} vé cho booking item {booking_item.id} - {booking_item.ticket_type.name}")
+    return tickets_created
+
 def book_ticket(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
     
@@ -153,6 +174,8 @@ def book_ticket(request, event_id):
                     )
                     booking_item.save()
                     
+                    # Không tạo vé tại đây, chỉ tạo khi thanh toán thành công
+                    
                     total_amount += ticket_type.price * quantity
                     total_quantity += quantity
             
@@ -231,6 +254,9 @@ def create_booking(request, event_id):
                         subtotal=ticket_type.price * quantity
                     )
                     booking_item.save()
+                    
+                    # Tạo vé cho booking item
+                    create_tickets_for_booking_item(booking_item)
                     
                     total_amount += ticket_type.price * quantity
                     total_quantity += quantity
@@ -343,6 +369,9 @@ def verify_payment(request):
                 ticket_type.available_quantity -= booking_item.quantity
                 ticket_type.save()
                 logger.info(f"Đã giảm {booking_item.quantity} vé loại {ticket_type.name} - còn lại: {ticket_type.available_quantity}")
+            
+            # Tạo vé cho booking item
+            create_tickets_for_booking_item(booking_item)
         
         # Tương thích ngược với mô hình cũ - giảm số lượng nếu không có booking items
         if not booking.booking_items.exists() and booking.ticket_type:
@@ -408,7 +437,7 @@ def send_booking_confirmation_email(booking):
     # Chuẩn bị context cho template email
     context = {
         'booking': booking,
-        'event': booking.event,
+        'event': booking,
         'session': booking.session
     }
     
@@ -673,20 +702,38 @@ def check_payment_status(request, order_id):
                             booking.payment_date = timezone.now()
                             booking.save()
                             
-                            # Cập nhật số lượng vé còn lại cho tất cả các booking items
+                            # Xóa vé cũ nếu có và tạo mới cho tất cả booking items
+                            logger.info(f"Đang tạo vé mới cho booking {booking.id} - {booking.order_id}")
                             for booking_item in booking.booking_items.all():
+                                # Xóa vé cũ nếu có
+                                booking_item.tickets.all().delete()
+                                # Tạo mới vé
+                                create_tickets_for_booking_item(booking_item)
+                                logger.info(f"Đã tạo vé cho booking_item {booking_item.id}, loại vé {booking_item.ticket_type.name}")
+                                
+                                # Cập nhật số lượng vé còn lại
                                 ticket_type = booking_item.ticket_type
-                                if ticket_type and ticket_type.available_quantity >= booking_item.quantity:
-                                    ticket_type.available_quantity -= booking_item.quantity
+                                if ticket_type:
                                     ticket_type.save()
-                                    logger.info(f"Đã giảm {booking_item.quantity} vé loại {ticket_type.name} - còn lại: {ticket_type.available_quantity}")
+                                    logger.info(f"Đã giảm {booking_item.quantity} vé loại {ticket_type.name}")
                             
-                            # Tương thích ngược - cập nhật nếu không có booking items
+                            # Tương thích ngược - Nếu không có booking items thì tạo vé trực tiếp
                             if not booking.booking_items.exists() and booking.ticket_type:
-                                ticket_type = booking.ticket_type
-                                if ticket_type and ticket_type.available_quantity >= booking.quantity:
-                                    ticket_type.available_quantity -= booking.quantity
-                                    ticket_type.save()
+                                from .models import Ticket, BookingItem
+                                
+                                # Tạo booking item mới
+                                booking_item = BookingItem(
+                                    booking=booking,
+                                    ticket_type=booking.ticket_type,
+                                    quantity=booking.quantity,
+                                    unit_price=booking.ticket_type.price,
+                                    subtotal=booking.ticket_type.price * booking.quantity
+                                )
+                                booking_item.save()
+                                
+                                # Tạo vé
+                                create_tickets_for_booking_item(booking_item)
+                                logger.info(f"Tạo vé cho booking {booking.id} theo cách tương thích ngược")
                             
                             # Gửi email xác nhận nếu cần
                             try:
@@ -706,6 +753,20 @@ def check_payment_status(request, order_id):
         
         # Nếu không tìm thấy giao dịch hoặc có lỗi, kiểm tra database
         if booking.payment_status == 'Paid':
+            # Kiểm tra và đảm bảo vé đã được tạo
+            has_tickets = False
+            for booking_item in booking.booking_items.all():
+                if booking_item.tickets.exists():
+                    has_tickets = True
+                    break
+            
+            # Nếu chưa có vé nào, tạo vé mới
+            if not has_tickets:
+                logger.info(f"Booking {booking.id} đã thanh toán nhưng chưa có vé, đang tạo vé mới")
+                for booking_item in booking.booking_items.all():
+                    create_tickets_for_booking_item(booking_item)
+                    logger.info(f"Đã tạo vé cho booking_item {booking_item.id}")
+            
             redirect_url = reverse('booking:complete_booking', args=[booking.id])
             return JsonResponse({
                 'paid': True,

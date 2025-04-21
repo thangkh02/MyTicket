@@ -2,232 +2,410 @@
 {% load static %}
 {% load humanize %}
 
-{% block title %}Chi tiết vé - {{ event.title }} - MyTicket{% endblock %}
+{% block title %}Chi tiết đơn hàng - {{ event.title }} - MyTicket{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb bg-white p-2 rounded shadow-sm">
-                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Trang chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}" class="text-decoration-none">Vé của tôi</a></li>
-                    <li class="breadcrumb-item active text-muted" aria-current="page">Chi tiết vé</li>
-                </ol>
-            </nav>
-
-            <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-                <!-- Header với thông tin cơ bản -->
-                <div class="card-header text-center bg-white border-bottom p-4">
-                    <h3 class="mb-1 fw-bold text-dark">{{ event.title }}</h3>
-                    <p class="mb-0 text-muted">{{ session.start_time|date:"H:i, l d/m/Y" }}</p>
+<!-- Nền trang với gradient nhẹ -->
+<div class="ticket-detail-page">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="ticket-breadcrumb mt-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="bi bi-house"></i></a></li>
+                <li class="breadcrumb-item"><a href="{% url 'booking:my_tickets' %}">Vé của tôi</a></li>
+                <li class="breadcrumb-item active">Chi tiết đơn hàng</li>
+            </ol>
+        </nav>
+        
+        <!-- Tiêu đề chính và trạng thái vé -->
+        <div class="ticket-header-section">
+            <h1 class="event-title">{{ event.title }}</h1>
+            
+            <div class="ticket-status-wrapper">
+                {% if booking.payment_status == 'Paid' %}
+                <div class="ticket-status status-paid">
+                    <div class="status-indicator"></div>
+                    <i class="bi bi-check-circle"></i>
+                    <span>Đã thanh toán</span>
                 </div>
-
-                {% if booking.payment_status == 'Cancelled' %}
-                <div class="alert alert-light border-0 rounded-0 mb-0 text-center p-3 border-start border-danger border-4">
-                    <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Vé đã bị hủy</h5>
+                {% elif booking.payment_status == 'Pending' %}
+                <div class="ticket-status status-pending">
+                    <div class="status-indicator"></div>
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>Chờ thanh toán</span>
+                </div>
+                {% elif booking.payment_status == 'Cancelled' %}
+                <div class="ticket-status status-cancelled">
+                    <div class="status-indicator"></div>
+                    <i class="bi bi-x-circle"></i>
+                    <span>Đã hủy</span>
                 </div>
                 {% endif %}
-
-                <div class="card-body p-4 p-md-5 bg-white">
-                    <!-- Thông tin đặt vé -->
-                    <div class="mb-5">
-                        <div class="ticket-section-header mb-4">
-                            <div class="section-icon me-2">
-                                <i class="bi bi-person text-primary"></i>
-                            </div>
-                            <h5 class="section-title">Thông tin đặt vé</h5>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Mã đơn hàng:</div>
-                            <div class="col-sm-8"><span class="order-code">{{ booking.order_id }}</span></div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Người đặt:</div>
-                            <div class="col-sm-8">{{ booking.name }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Email:</div>
-                            <div class="col-sm-8">{{ booking.email }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Số điện thoại:</div>
-                            <div class="col-sm-8">{{ booking.phone }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Thời gian đặt vé:</div>
-                            <div class="col-sm-8">{{ booking.booking_date|date:"H:i, d/m/Y" }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Thông tin vé -->
-                    <div class="mb-5">
-                        <div class="ticket-section-header mb-4">
-                            <div class="section-icon me-2">
-                                <i class="bi bi-ticket-perforated text-primary"></i>
-                            </div>
-                            <h5 class="section-title">Thông tin vé</h5>
-                        </div>
-                        
-                        {% if booking.booking_items.all %}
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Loại vé</th>
-                                        <th class="text-center">Số lượng</th>
-                                        <th class="text-end">Đơn giá</th>
-                                        <th class="text-end">Thành tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in booking.booking_items.all %}
-                                    <tr>
-                                        <td>{{ item.ticket_type.name }}</td>
-                                        <td class="text-center">{{ item.quantity }} vé</td>
-                                        <td class="text-end">{{ item.unit_price|floatformat:0|intcomma }}đ</td>
-                                        <td class="text-end">{{ item.subtotal|floatformat:0|intcomma }}đ</td>
-                                    {% endfor %}
-                                    <tr class="table-light">
-                                        <td colspan="3" class="fw-bold text-end">Tổng tiền</td>
-                                        <td class="fw-bold text-success text-end fs-5">{{ booking.total_price|floatformat:0|intcomma }}đ</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        {% else %}
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Loại vé:</div>
-                            <div class="col-sm-8">{{ booking.ticket_type.name }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Số lượng:</div>
-                            <div class="col-sm-8">{{ booking.quantity }} vé</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Đơn giá:</div>
-                            <div class="col-sm-8">{{ booking.ticket_type.price|floatformat:0|intcomma }}đ / vé</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Tổng tiền:</div>
-                            <div class="col-sm-8 fw-bold text-success fs-5">{{ booking.total_price|floatformat:0|intcomma }}đ</div>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="row mb-2 align-items-center">
-                            <div class="col-sm-4 text-muted">Trạng thái:</div>
-                            <div class="col-sm-8">
-                                {% if booking.payment_status == 'Paid' %}
-                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-1 fs-6">
-                                    <i class="bi bi-check-circle me-1"></i> Đã thanh toán
-                                </span>
-                                {% elif booking.payment_status == 'Pending' %}
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1 fs-6">
-                                    <i class="bi bi-clock me-1"></i> Chờ thanh toán
-                                </span>
-                                {% elif booking.payment_status == 'Cancelled' %}
-                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fs-6">
-                                    <i class="bi bi-x-circle me-1"></i> Đã hủy
-                                </span>
-                                {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle rounded-pill px-3 py-1 fs-6">
-                                    {{ booking.get_payment_status_display }}
-                                </span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if booking.payment_date %}
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Thời gian thanh toán:</div>
-                            <div class="col-sm-8">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Thông tin sự kiện -->
-                    <div class="mb-5">
-                        <div class="ticket-section-header mb-4">
-                            <div class="section-icon me-2">
-                                <i class="bi bi-calendar-event text-primary"></i>
-                            </div>
-                            <h5 class="section-title">Thông tin sự kiện</h5>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Tên sự kiện:</div>
-                            <div class="col-sm-8">{{ event.title }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Địa điểm:</div>
-                            <div class="col-sm-8">{{ event.location }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Thời gian:</div>
-                            <div class="col-sm-8">
-                                {% if session.start_time.date == session.end_time.date %}
-                                    {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"l, d/m/Y" }}
-                                {% else %}
-                                    {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mã QR -->
-                    {% if booking.payment_status == 'Paid' %}
-                    <div class="row justify-content-center mb-5">
-                        <div class="col-md-8 text-center">
-                            <div class="ticket-section-header mb-3 justify-content-center">
-                                <div class="section-icon me-2">
-                                    <i class="bi bi-qr-code text-primary"></i>
-                                </div>
-                                <h5 class="section-title">Mã QR vé của bạn</h5>
-                            </div>
-                            <div class="qr-code-container mb-3 p-4 bg-white d-inline-block rounded-3 shadow-sm">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&bạndata={{ booking.order_id }}&qzone=1" alt="QR code vé" class="img-fluid">
-                            </div>
-                            <p class="text-muted small">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Các nút thao tác -->
-                    <div class="row">
-                        <div class="col-md-12 text-center">
-                            <a href="{% url 'booking:my_tickets' %}" class="btn btn-outline-secondary px-4 py-2 me-2">
-                                <i class="bi bi-arrow-left me-1"></i> Quay lại
-                            </a>
-
-                            {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-                            <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-outline-danger px-4 py-2">
-                                <i class="bi bi-x-circle me-1"></i> Hủy vé
-                            </a>
-                            {% elif booking.payment_status == 'Pending' %}
-                            <a href="{% url 'booking:book_ticket' booking.event.id %}?order_id={{ booking.order_id }}" class="btn btn-primary px-4 py-2">
-                                <i class="bi bi-credit-card me-1"></i> Thanh toán ngay
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            {% if booking.payment_status == 'Paid' and booking.can_cancel %}
-            <div class="alert alert-light mt-4 border-info border-start border-4 shadow-sm rounded">
-                <div class="d-flex">
-                    <div class="section-icon blue-icon me-3 align-self-start mt-1">
-                        <i class="bi bi-info-circle text-info"></i>
+        </div>
+        
+        <div class="ticket-container">
+            <div class="row">
+                <!-- Thông tin vé bên trái -->
+                <div class="col-lg-8">
+                    <div class="ticket-card">
+                        <!-- Ticket header -->
+                        <div class="ticket-header">
+                            <div class="order-id">
+                                <span class="order-label">Mã đơn:</span>
+                                <span class="order-code">{{ booking.order_id }}</span>
+                            </div>
+                            <div class="order-date">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Đặt lúc {{ booking.booking_date|date:"H:i, d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Ticket body -->
+                        <div class="ticket-body">
+                            <!-- Thông tin sự kiện -->
+                            <div class="ticket-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </div>
+                                    <h2 class="section-title">Thông tin sự kiện</h2>
+                                </div>
+                                
+                                <div class="section-content">
+                                    <div class="event-info-grid">
+                                        <div class="event-image">
+                                            {% if event.image %}
+                                                <img src="{{ event.image.url }}" alt="{{ event.title }}">
+                                            {% else %}
+                                                <img src="{% static 'app/images/default-event.jpg' %}" alt="{{ event.title }}">
+                                            {% endif %}
+                                        </div>
+                                        <div class="event-details">
+                                            <div class="info-row">
+                                                <div class="info-label">Tên sự kiện:</div>
+                                                <div class="info-value">{{ event.title }}</div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-label">Địa điểm:</div>
+                                                <div class="info-value">{{ event.location }}</div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-label">Thời gian:</div>
+                                                <div class="info-value">
+                                                    {% if session.start_time.date == session.end_time.date %}
+                                                        {{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}, {{ session.start_time|date:"l, d/m/Y" }}
+                                                    {% else %}
+                                                        {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% if event.organizer_name %}
+                                            <div class="info-row">
+                                                <div class="info-label">Ban tổ chức:</div>
+                                                <div class="info-value">{{ event.organizer_name }}</div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Thông tin người đặt -->
+                            <div class="ticket-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <h2 class="section-title">Thông tin người đặt</h2>
+                                </div>
+                                
+                                <div class="section-content customer-info">
+                                    <div class="info-row">
+                                        <div class="info-label">Họ tên:</div>
+                                        <div class="info-value">{{ booking.user.get_full_name|default:booking.name }}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Email:</div>
+                                        <div class="info-value">{{ booking.user.email|default:booking.email }}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Tên đăng nhập:</div>
+                                        <div class="info-value">{{ booking.user.username }}</div>
+                                    </div>
+                                    {% if booking.user.profile.phone_number %}
+                                    <div class="info-row">
+                                        <div class="info-label">Số điện thoại:</div>
+                                        <div class="info-value">{{ booking.user.profile.phone_number|default:booking.phone }}</div>
+                                    </div>
+                                    {% else %}
+                                    <div class="info-row">
+                                        <div class="info-label">Số điện thoại:</div>
+                                        <div class="info-value">{{ booking.phone }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Đường cắt -->
+                            <div class="ticket-divider">
+                                <div class="divider-line"></div>
+                                <div class="divider-icon">
+                                    <i class="bi bi-scissors"></i>
+                                </div>
+                                <div class="divider-line"></div>
+                            </div>
+                            
+                            <!-- Thông tin vé và thanh toán -->
+                            <div class="ticket-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="bi bi-ticket-perforated"></i>
+                                    </div>
+                                    <h2 class="section-title">Chi tiết vé</h2>
+                                </div>
+                                
+                                <div class="section-content">
+                                    {% if booking.booking_items.all %}
+                                    <div class="ticket-table-wrapper">
+                                        <table class="ticket-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Loại vé</th>
+                                                    <th class="text-center">Số lượng</th>
+                                                    <th class="text-end">Đơn giá</th>
+                                                    <th class="text-end">Thành tiền</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in booking.booking_items.all %}
+                                                <tr class="ticket-row" data-bs-toggle="collapse" data-bs-target="#ticketCodes-{{ item.id }}">
+                                                    <td>
+                                                        <div class="ticket-item-name">
+                                                            <i class="bi bi-ticket-perforated"></i>
+                                                            <span>{{ item.ticket_type.name }}</span>
+                                                            <i class="bi bi-chevron-down ticket-dropdown-icon"></i>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">{{ item.quantity }} vé</td>
+                                                    <td class="text-end">{{ item.unit_price|floatformat:0|intcomma }}đ</td>
+                                                    <td class="text-end">{{ item.subtotal|floatformat:0|intcomma }}đ</td>
+                                                </tr>
+                                                <tr class="ticket-codes-row">
+                                                    <td colspan="4" class="p-0">
+                                                        <div id="ticketCodes-{{ item.id }}" class="collapse ticket-codes-container">
+                                                            <div class="ticket-codes-header">
+                                                                <i class="bi bi-qr-code"></i>
+                                                                <span>Mã vé ({{ item.quantity }})</span>
+                                                            </div>
+                                                            <div class="ticket-codes-list">
+                                                                {% for ticket in item.tickets.all %}
+                                                                <div class="ticket-code-item">
+                                                                    <div class="ticket-number">Vé #{{ forloop.counter }}</div>
+                                                                    <div class="code-value">{{ ticket.ticket_code }}</div>
+                                                                </div>
+                                                                {% empty %}
+                                                                <div class="no-ticket-codes">
+                                                                    <p>Không tìm thấy mã vé. Vui lòng liên hệ ban tổ chức.</p>
+                                                                </div>
+                                                                {% endfor %}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="simple-ticket-info">
+                                        <div class="info-row">
+                                            <div class="info-label">Loại vé:</div>
+                                            <div class="info-value">{{ booking.ticket_type.name }}</div>
+                                        </div>
+                                        <div class="info-row">
+                                            <div class="info-label">Số lượng:</div>
+                                            <div class="info-value">{{ booking.quantity }} vé</div>
+                                        </div>
+                                        <div class="info-row">
+                                            <div class="info-label">Đơn giá:</div>
+                                            <div class="info-value">{{ booking.ticket_type.price|floatformat:0|intcomma }}đ/vé</div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Thông tin thanh toán -->
+                                    <div class="payment-info">
+                                        <div class="payment-status">
+                                            <div class="info-row">
+                                                <div class="info-label">Trạng thái:</div>
+                                                <div class="info-value">
+                                                    {% if booking.payment_status == 'Paid' %}
+                                                    <span class="badge-status paid">Đã thanh toán</span>
+                                                    {% elif booking.payment_status == 'Pending' %}
+                                                    <span class="badge-status pending">Chờ thanh toán</span>
+                                                    {% elif booking.payment_status == 'Cancelled' %}
+                                                    <span class="badge-status cancelled">Đã hủy</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if booking.payment_date %}
+                                            <div class="info-row">
+                                                <div class="info-label">Ngày thanh toán:</div>
+                                                <div class="info-value">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="total-section">
+                                            <div class="total-label">Tổng tiền thanh toán</div>
+                                            <div class="total-value">{{ booking.total_price|floatformat:0|intcomma }}<sup>đ</sup></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ticket footer with buttons -->
+                        <div class="ticket-footer">
+                            <div class="ticket-actions">
+                                <a href="{% url 'booking:my_tickets' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i>
+                                    <span>Quay lại</span>
+                                </a>
+                                
+                                {% if booking.payment_status == 'Paid' and booking.can_cancel %}
+                                <a href="{% url 'booking:cancel_ticket' booking.id %}" class="btn btn-danger">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>Hủy vé</span>
+                                </a>
+                                {% elif booking.payment_status == 'Pending' %}
+                                <a href="{% url 'booking:payment_page' booking.order_id %}" class="btn btn-primary">
+                                    <i class="bi bi-credit-card"></i>
+                                    <span>Thanh toán ngay</span>
+                                </a>
+                                {% endif %}
+                                
+                                {% if booking.payment_status == 'Paid' %}
+                                <a href="#" class="btn btn-success">
+                                    <i class="bi bi-download"></i>
+                                    <span>Tải vé</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h6 class="mb-2 fw-bold text-dark">Chính sách hủy vé</h6>
-                        <ul class="mb-0 small text-muted ps-3">
+                    
+                    <!-- Chính sách hủy vé -->
+                    {% if booking.payment_status == 'Paid' and booking.can_cancel %}
+                    <div class="policy-card">
+                        <div class="policy-header">
+                            <div class="policy-icon">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <h3 class="policy-title">Chính sách hủy vé</h3>
+                        </div>
+                        <ul class="policy-list">
                             <li>Vé chỉ có thể hủy trước khi sự kiện diễn ra ít nhất <strong>3 ngày</strong></li>
                             <li>Hoàn tiền <strong>80%</strong> nếu hủy vé trước sự kiện từ <strong>7 ngày</strong> trở lên</li>
                             <li>Hoàn tiền <strong>50%</strong> nếu hủy vé trước sự kiện từ <strong>3-7 ngày</strong></li>
                             <li>Không hoàn tiền nếu hủy trong vòng <strong>3 ngày</strong> trước sự kiện</li>
                         </ul>
                     </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Sidebar bên phải -->
+                <div class="col-lg-4">
+                    <!-- Timeline -->
+                    <div class="sidebar-box timeline-box">
+                        <div class="sidebar-title">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Quá trình đơn hàng</span>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-item active">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-content">
+                                    <h4>Đặt vé</h4>
+                                    <p>{{ booking.booking_date|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            {% if booking.payment_status == 'Paid' %}
+                            <div class="timeline-item active">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-content">
+                                    <h4>Thanh toán thành công</h4>
+                                    <p>{{ booking.payment_date|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% elif booking.payment_status == 'Pending' %}
+                            <div class="timeline-item">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-content">
+                                    <h4>Chờ thanh toán</h4>
+                                    <p>Vui lòng hoàn tất thanh toán</p>
+                                </div>
+                            </div>
+                            {% elif booking.payment_status == 'Cancelled' %}
+                            <div class="timeline-item cancelled">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-content">
+                                    <h4>Đơn hàng đã hủy</h4>
+                                    <p>{{ booking.cancelled_at|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if booking.payment_status == 'Paid' %}
+                            <div class="timeline-item future">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-content">
+                                    <h4>Tham dự sự kiện</h4>
+                                    <p>{{ session.start_time|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Hỗ trợ -->
+                    <div class="sidebar-box support-box">
+                        <div class="sidebar-title">
+                            <i class="bi bi-headset"></i>
+                            <span>Hỗ trợ</span>
+                        </div>
+                        <div class="support-content">
+                            <div class="support-method">
+                                <div class="support-icon">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <div class="support-info">
+                                    <h5>Email</h5>
+                                    <p>support@myticket.vn</p>
+                                </div>
+                            </div>
+                            
+                            <div class="support-method">
+                                <div class="support-icon">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div class="support-info">
+                                    <h5>Hotline</h5>
+                                    <p>1900 1234</p>
+                                </div>
+                            </div>
+                            
+                            <div class="support-note">
+                                <i class="bi bi-info-circle"></i>
+                                <span>Hỗ trợ từ 8:00 - 22:00 mỗi ngày</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -236,126 +414,963 @@
 {% block extra_css %}
 <style>
     :root {
-        --primary-color: #00ad54;
-        --primary-light: #e9f7f1;
-        --secondary-color: #4a90e2;
-        --light-bg: #f8f9fa;
-        --border-radius: 8px;
-        --box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* Màu sắc chủ đạo */
+        --primary: #2dc275;
+        --primary-dark: #1fa761;
+        --primary-light: rgba(45, 194, 117, 0.1);
+        --secondary: #4c6fff;
+        --secondary-light: rgba(76, 111, 255, 0.1);
+        
+        /* Màu trạng thái */
+        --danger: #ff4d4f;
+        --danger-light: rgba(255, 77, 79, 0.12);
+        --warning: #faad14;
+        --warning-light: rgba(250, 173, 20, 0.12);
+        --success: #52c41a;
+        --success-light: rgba(82, 196, 26, 0.12);
+        
+        /* Màu cơ bản */
+        --dark: #2c3e50;
+        --light: #ffffff;
+        --border: #eaedf1;
+        --background: #f8f9fc;
+        --background-secondary: #f2f4f8;
+        --text: #2c3e50;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        
+        /* Độ bo góc & shadow */
+        --border-radius-sm: 6px;
+        --border-radius: 12px;
+        --border-radius-lg: 16px;
+        --box-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+        --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        --box-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
     }
     
     body {
-        background-color: #f8f9fa;
-        color: #333;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    
-    /* Card styling - WHITE background */
-    .card {
-        border-radius: var(--border-radius);
-        transition: all 0.3s ease;
-        background-color: #ffffff !important;
-        box-shadow: var(--box-shadow);
-    }
-    
-    .card-header {
-        background-color: #ffffff !important;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-    }
-    
-    /* Section headers design */
-    .ticket-section-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-title {
+        background-color: var(--background);
+        font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
         margin: 0;
-        font-weight: 700;
-        color: #333;
-        font-size: 1.1rem;
+        padding: 0;
+        overflow-x: hidden;
+        line-height: 1.6;
     }
     
-    /* Icon styling - với màu sắc từ ảnh */
-    .section-icon {
-        width: 36px;
-        height: 36px;
+    .ticket-detail-page {
+        position: relative;
+        min-height: 100vh;
+        background: linear-gradient(180deg, var(--background) 0%, #ffffff 100%);
+        padding-bottom: 2rem;
+    }
+    
+    /* Header styles */
+    .ticket-header-section {
+        margin: 1rem 0 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .event-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+        color: var(--dark);
+    }
+    
+    /* Breadcrumb styles */
+    .ticket-breadcrumb {
+        margin-bottom: 1rem;
+    }
+    
+    .breadcrumb {
+        padding: 0;
+        background-color: transparent;
+        margin-bottom: 1rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background-color: rgba(0, 173, 84, 0.1);
     }
     
-    .blue-icon {
-        background-color: rgba(74, 144, 226, 0.1);
-    }
-    
-    .section-icon i {
-        font-size: 18px;
-    }
-    
-    /* Order code styling */
-    .order-code {
-        font-family: monospace;
-        background-color: #f8f9fa;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    /* Button styling */
-    .btn-primary {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-    
-    .btn-primary:hover {
-        background-color: #009548;
-        border-color: #009548;
-        box-shadow: 0 2px 5px rgba(0, 173, 84, 0.3);
-    }
-    
-    .btn-outline-primary {
-        color: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-    
-    .btn-outline-primary:hover {
-        background-color: var(--primary-color);
-        color: white;
-    }
-    
-    .qr-code-container {
-        transition: transform 0.3s ease;
-    }
-    
-    .qr-code-container:hover {
-        transform: scale(1.03);
-    }
-    
-    .qr-code-container img {
-        display: block;
-    }
-    
-    /* Breadcrumb styling */
-    .breadcrumb {
+    .breadcrumb-item {
+        color: var(--text-secondary);
         font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-    
-    .breadcrumb-item a {
-        color: var(--primary-color);
+        display: flex;
+        align-items: center;
     }
     
     .breadcrumb-item.active {
-        color: #6c757d;
+        color: var(--text);
     }
     
-    /* Alert styling */
-    .alert {
-        background-color: #ffffff;
+    .breadcrumb-item+.breadcrumb-item::before {
+        color: var(--text-muted);
+    }
+    
+    .breadcrumb-item a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: var(--primary-dark);
+    }
+    
+    .breadcrumb-item i {
+        margin-right: 3px;
+        font-size: 1rem;
+    }
+    
+    /* Ticket status */
+    .ticket-status-wrapper {
+        margin-bottom: 1rem;
+    }
+    
+    .ticket-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        position: relative;
+    }
+    
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 4px;
+    }
+    
+    .status-paid {
+        background-color: rgba(82, 196, 26, 0.15);
+        color: var(--success);
+    }
+    
+    .status-paid .status-indicator {
+        background-color: var(--success);
+        box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.3);
+    }
+    
+    .status-pending {
+        background-color: rgba(250, 173, 20, 0.15);
+        color: var(--warning);
+    }
+    
+    .status-pending .status-indicator {
+        background-color: var(--warning);
+        box-shadow: 0 0 0 3px rgba(250, 173, 20, 0.3);
+    }
+    
+    .status-cancelled {
+        background-color: rgba(255, 77, 79, 0.15);
+        color: var(--danger);
+    }
+    
+    .status-cancelled .status-indicator {
+        background-color: var(--danger);
+        box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.3);
+    }
+    
+    /* Ticket container */
+    .ticket-container {
+        margin: 0 auto 2rem;
+    }
+    
+    /* Card styles */
+    .ticket-card {
+        background-color: var(--light);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        position: relative;
+        border: 1px solid var(--border);
+    }
+    
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background-color: var(--background-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .order-id {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .order-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .order-code {
+        background-color: var(--light);
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+    }
+    
+    .order-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+    
+    /* Ticket body */
+    .ticket-body {
+        padding: 0;
+    }
+    
+    .ticket-section {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .ticket-section:last-child {
+        border-bottom: none;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .section-icon {
+        width: 42px;
+        height: 42px;
+        background-color: var(--primary-light);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .section-icon i {
+        font-size: 1.25rem;
+        color: var(--primary);
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    
+    .section-content {
+        padding: 0 0.5rem;
+    }
+    
+    /* Event info grid */
+    .event-info-grid {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .event-image {
+        width: 100%;
+        position: relative;
+        padding-top: 56.25%; /* Tỷ lệ 16:9 (9/16 = 0.5625 = 56.25%) */
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow-sm);
+    }
+    
+    .event-image img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .event-image:hover img {
+        transform: scale(1.05);
+    }
+    
+    .event-details {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    /* Information rows */
+    .info-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-label {
+        width: 150px;
+        min-width: 150px;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .info-value {
+        font-weight: 500;
+        flex: 1;
+    }
+    
+    /* Divider */
+    .ticket-divider {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1.5rem;
+        background: repeating-linear-gradient(
+            45deg,
+            var(--background-secondary),
+            var(--background-secondary) 5px,
+            white 5px,
+            white 10px
+        );
+    }
+    
+    .divider-line {
+        flex: 1;
+        height: 0;
+        border-top: 2px dashed var(--text-secondary);
+    }
+    
+    .divider-icon {
+        padding: 0 1rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Ticket table */
+    .ticket-table-wrapper {
+        margin-bottom: 1.5rem;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    
+    .ticket-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .ticket-table th,
+    .ticket-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .ticket-table th {
+        background-color: var(--background-secondary);
+        color: var(--text);
+        font-weight: 600;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+    
+    .ticket-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    .text-end {
+        text-align: right;
+    }
+    
+    /* Ticket row styles */
+    .ticket-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .ticket-row:hover {
+        background-color: var(--background-secondary);
+    }
+    
+    .ticket-item-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .ticket-dropdown-icon {
+        margin-left: auto;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+    }
+    
+    [data-bs-toggle="collapse"][aria-expanded="true"] .ticket-dropdown-icon {
+        transform: rotate(180deg);
+    }
+    
+    /* Ticket codes container */
+    .ticket-codes-container {
+        background-color: var(--background-secondary);
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .ticket-codes-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px dashed var(--border);
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    .ticket-codes-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1rem;
+    }
+    
+    .ticket-code-item {
+        background-color: white;
+        padding: 0.75rem;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .ticket-code-item:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--box-shadow);
+    }
+    
+    .ticket-number {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px dashed var(--border);
+    }
+    
+    .code-value {
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+        word-break: break-all;
+    }
+    
+    .no-ticket-codes {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 1rem;
+        font-style: italic;
+        color: var(--text-secondary);
+    }
+    
+    /* Payment info */
+    .payment-info {
+        margin-top: 1.5rem;
+    }
+    
+    .payment-status {
+        margin-bottom: 1.5rem;
+    }
+    
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .badge-status.paid {
+        background-color: var(--success-light);
+        color: var(--success);
+    }
+    
+    .badge-status.pending {
+        background-color: var(--warning-light);
+        color: var(--warning);
+    }
+    
+    .badge-status.cancelled {
+        background-color: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    /* Total section */
+    .total-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem;
+        background-color: var(--primary-light);
+        border-radius: var(--border-radius);
+    }
+    
+    .total-label {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: var(--primary-dark);
+    }
+    
+    .total-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    /* Ticket actions */
+    .ticket-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border);
+        background-color: var(--background-secondary);
+    }
+    
+    .ticket-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+        text-decoration: none;
+        cursor: pointer;
+        min-width: 120px;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary);
+        color: white;
+        box-shadow: 0 2px 6px rgba(45, 194, 117, 0.2);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        box-shadow: 0 4px 12px rgba(45, 194, 117, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background-color: white;
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+        background-color: var(--background);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    
+    .btn-danger {
+        background-color: white;
+        color: var(--danger);
+        border: 1px solid rgba(255, 77, 79, 0.2);
+    }
+    
+    .btn-danger:hover {
+        background-color: var(--danger);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(255, 77, 79, 0.2);
+    }
+    
+    .btn-success {
+        background-color: white;
+        color: var(--success);
+        border: 1px solid rgba(82, 196, 26, 0.2);
+    }
+    
+    .btn-success:hover {
+        background-color: var(--success);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(82, 196, 26, 0.2);
+    }
+    
+    /* Policy card */
+    .policy-card {
+        background-color: var(--light);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .policy-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .policy-icon {
+        width: 36px;
+        height: 36px;
+        background-color: var(--secondary-light);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .policy-icon i {
+        font-size: 1.1rem;
+        color: var(--secondary);
+    }
+    
+    .policy-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    
+    .policy-list {
+        list-style-type: none;
+        padding-left: 0.5rem;
+        margin: 0;
+    }
+    
+    .policy-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    .policy-list li:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--secondary);
+    }
+    
+    /* Sidebar boxes */
+    .sidebar-box {
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    
+    .sidebar-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1.25rem;
+        background-color: var(--background-secondary);
+        border-bottom: 1px solid var(--border);
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
+    
+    .sidebar-title i {
+        color: var(--primary);
+    }
+    
+    /* QR box */
+    .qr-box {
+        text-align: center;
+    }
+    
+    .qr-container {
+        padding: 1.5rem;
+    }
+    
+    .qr-code {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 12px;
+        display: inline-block;
+        box-shadow: var(--box-shadow-sm);
+        border: 1px solid var(--border);
+        transition: all 0.3s ease;
+    }
+    
+    .qr-code:hover {
+        transform: scale(1.02);
+        box-shadow: var(--box-shadow);
+    }
+    
+    .qr-code img {
+        width: 200px;
+        height: 200px;
+        display: block;
+    }
+    
+    .qr-instruction {
+        padding: 0 1rem 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    /* Timeline */
+    .timeline-box .sidebar-title {
+        margin-bottom: 0;
+    }
+    
+    .timeline {
+        padding: 1.5rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    
+    .timeline-item:not(:last-child)::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        bottom: 0;
+        width: 2px;
+        background-color: var(--border);
+    }
+    
+    .timeline-point {
+        position: absolute;
+        top: 6px;
+        left: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--text-muted);
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px var(--border);
+    }
+    
+    .timeline-item.active .timeline-point {
+        background-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(45, 194, 117, 0.3);
+    }
+    
+    .timeline-item.cancelled .timeline-point {
+        background-color: var(--danger);
+        box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.3);
+    }
+    
+    .timeline-item.future .timeline-point {
+        background-color: white;
+        border: 2px solid var(--text-muted);
+        box-shadow: none;
+    }
+    
+    .timeline-content h4 {
+        margin: 0 0 0.25rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    .timeline-content p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Support box */
+    .support-box .support-content {
+        padding: 1.5rem;
+    }
+    
+    .support-method {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .support-method:last-of-type {
+        border-bottom: none;
+    }
+    
+    .support-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        background-color: var(--primary-light);
+        color: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .support-info {
+        flex: 1;
+    }
+    
+    .support-info h5 {
+        margin: 0 0 0.25rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    .support-info p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--text);
+        font-weight: 500;
+    }
+    
+    .support-note {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        padding-top: 0.5rem;
+    }
+    
+    /* Responsive styling */
+    @media (max-width: 992px) {
+        .event-title {
+            font-size: 1.8rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .event-info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .event-image {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .ticket-section {
+            padding: 1.25rem;
+        }
+        
+        .section-content {
+            padding: 0;
+        }
+        
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+        
+        .info-label {
+            width: 100%;
+        }
+        
+        .ticket-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .total-section {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+    }
+    
+    /* Page entrance animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .ticket-card,
+    .policy-card,
+    .sidebar-box {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+    
+    .ticket-card {
+        animation-delay: 0.1s;
+    }
+    
+    .policy-card {
+        animation-delay: 0.2s;
+    }
+    
+    .sidebar-box:nth-child(1) {
+        animation-delay: 0.3s;
+    }
+    
+    .sidebar-box:nth-child(2) {
+        animation-delay: 0.4s;
+    }
+    
+    .sidebar-box:nth-child(3) {
+        animation-delay: 0.5s;
     }
 </style>
 {% endblock %}
@@ -363,16 +1378,35 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Hiệu ứng loading kết thúc sau khi trang tải xong
-        setTimeout(() => {
-            const loadingBar = document.querySelector('.loading-animation');
-            if (loadingBar) {
-                loadingBar.style.opacity = '0';
-                setTimeout(() => {
-                    loadingBar.style.display = 'none';
-                }, 300);
-            }
-        }, 800);
+        // Add scroll reveal effects for sections
+        const revealElements = document.querySelectorAll('.ticket-section, .sidebar-box');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('section-visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        revealElements.forEach(element => {
+            observer.observe(element);
+        });
+        
+        // Slide-in animation for timeline items
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.5s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateX(0)';
+            }, 300 + (index * 200));
+        });
     });
 </script>
 {% endblock %}
