@@ -252,8 +252,8 @@
                                             
                                             {% if booking.payment_date %}
                                             <div class="info-row">
-                                                <div class="info-label">Ngày thanh toán:</div>
-                                                <div class="info-value">{{ booking.payment_date|date:"H:i, d/m/Y" }}</div>
+                                                <div class="info-label">Ngày thanh toán</div>
+                                                <div class="info-value">{{ vn_payment_date|date:"H:i | d/m/Y" }}</div>
                                             </div>
                                             {% endif %}
                                         </div>

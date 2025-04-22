@@ -98,6 +98,40 @@
             font-size: 18px;
             color: #2dc275;
         }
+        /* Thêm style cho phần hiển thị mã vé */
+        .ticket-codes {
+            margin-top: 25px;
+        }
+        .ticket-code-item {
+            background-color: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .ticket-number {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .ticket-code {
+            background-color: #f8f9fa;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px dashed #ccc;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .timezone-note {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+            margin-top: 3px;
+        }
         @media only screen and (max-width: 600px) {
             .container {
                 width: 100%;
@@ -129,7 +163,7 @@
                 
                 <div class="ticket-row">
                     <span class="label">Ngày đặt vé:</span>
-                    <span class="value">{{ booking.booking_date|date:"H:i, d/m/Y" }}</span>
+                    <span class="value">{{ vn_booking_date }}</span>
                 </div>
                 
                 <div class="ticket-row">
@@ -149,7 +183,46 @@
                 
                 <div class="ticket-row">
                     <span class="label">Tổng tiền:</span>
-                    <span class="value total">{{ booking.total_price|floatformat:0 }} đ</span>
+                    <span class="value total"> {{ booking.total_price|floatformat:0 }} đ</span>
+                </div>
+            </div>
+            
+            <!-- Thêm phần hiển thị mã vé -->
+                        <!-- Phần hiển thị mã vé theo từng loại -->
+            <div class="ticket-info">
+                <h3>Mã vé của bạn</h3>
+                <p>Vui lòng xuất trình các mã vé này tại sự kiện để được vào cổng:</p>
+                
+                <div class="ticket-codes">
+                    {% for item in booking.booking_items.all %}
+                        <!-- Hiển thị tên loại vé -->
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="color: #2dc275; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e5e5; padding-bottom: 8px;">
+                                {{ item.ticket_type.name }} ({{ item.quantity }} vé)
+                            </h4>
+                            
+                            <!-- Hiển thị các vé thuộc loại này -->
+                            {% for ticket in item.tickets.all %}
+                                <div class="ticket-code-item">
+                                    <div class="ticket-number">{{ item.ticket_type.name }} - Vé #{{ forloop.counter }}</div>
+                                    <div class="ticket-code">{{ ticket.ticket_code }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% empty %}
+                        {% if booking.ticket_type %}
+                            <h4 style="color: #2dc275; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e5e5; padding-bottom: 8px;">
+                                {{ booking.ticket_type.name }} ({{ booking.quantity }} vé)
+                            </h4>
+                            
+                            {% for i in "x"|rjust:booking.quantity %}
+                                <div class="ticket-code-item">
+                                    <div class="ticket-number">{{ booking.ticket_type.name }} - Vé #{{ forloop.counter }}</div>
+                                    <div class="ticket-code">{{ booking.order_id }}-{{ forloop.counter }}</div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
             
@@ -170,18 +243,13 @@
                             {{ session.start_time|date:"H:i, d/m/Y" }} - {{ session.end_time|date:"H:i, d/m/Y" }}
                         {% endif %}
                     </span>
+                    
                 </div>
                 
                 <div class="ticket-row">
-                    <span class="label">Địa điểm:</span>
+                    <span class="label">Địa điểm : </span>
                     <span class="value">{{ event.location }}</span>
                 </div>
-            </div>
-            
-            <div class="qr-container">
-                <h3>Mã QR vé của bạn</h3>
-                <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ booking.order_id }}" alt="QR code vé" width="200" height="200">
-                <p class="note">Vui lòng xuất trình mã QR này khi tham gia sự kiện</p>
             </div>
             
             <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email support@myticket.com hoặc số điện thoại 1900 1234.</p>
@@ -194,7 +262,7 @@
         
         <div class="footer">
             <p>© 2023 MyTicket. Tất cả quyền được bảo lưu.<br>
-            123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+            Học viện Công nghệ Bưu chính Viễn thông</p>
         </div>
     </div>
 </body>

@@ -135,10 +135,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Cần thêm/kiểm tra các cấu hình sau
+# Cấu hình email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # hoặc SMTP server khác
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'pnthangkth@gmail.com'  # Thay bằng email thực của bạn
-EMAIL_HOST_PASSWORD = 'your_app_password'  # Thay bằng mật khẩu ứng dụng
-DEFAULT_FROM_EMAIL = 'MyTicket <pnthangkth@gmail.com>'
+EMAIL_HOST_USER = 'Pnthangkth21092004@gmail.com'  
+EMAIL_HOST_PASSWORD = 'ccdc rqyu wefb giil'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

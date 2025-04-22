@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from app.models import Event, EventSession, TicketType
 from .models import Booking, BookingItem
+from django.utils.html import strip_tags
 import json
 import logging
 import hashlib
@@ -430,27 +431,55 @@ def complete_booking(request, booking_id=None):
 
 def send_booking_confirmation_email(booking):
     """Gửi email xác nhận đặt vé thành công"""
-    subject = f'Xác nhận đặt vé: {booking.event.title}'
-    from_email = settings.DEFAULT_FROM_EMAIL
+    # Kiểm tra email người dùng
+    
     to_email = booking.email
     
-    # Chuẩn bị context cho template email
-    context = {
-        'booking': booking,
-        'event': booking,
-        'session': booking.session
-    }
-    
-    # Tạo nội dung email (HTML)
-    html_content = render_to_string('booking/email/booking_confirmation_email.html', context)
-    text_content = strip_tags(html_content)  # Phiên bản text của email
-    
-    # Tạo email
-    email = EmailMultiAlternatives(subject, text_content, from_email, [to_email])
-    email.attach_alternative(html_content, "text/html")
-    
-    # Gửi email
-    email.send()
+    # Nếu booking.email trống, thử lấy từ user.email
+    if not to_email and booking.user:
+        to_email = booking.user.email
+        logger.info(f"Sử dụng email từ user account: {to_email}")
+        
+    if not to_email:
+        logger.error(f"Không thể gửi email xác nhận: Không tìm thấy email - Booking ID {booking.id}")
+        return False
+        
+    try:
+        subject = f'Xác nhận đặt vé: {booking.event.title}'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        logger.info(f"Đang gửi email đến {to_email} với chủ đề '{subject}'")
+        # to_email = booking.email
+        
+        # Ghi log để debug
+        logger.info(f"Đang gửi email đến {to_email} với chủ đề '{subject}'")
+        from datetime import timedelta
+        # Chuẩn bị context cho template email
+        context = {
+            'booking': booking,
+            'event': booking.event,
+            'session': booking.session,
+            'vn_booking_date': (booking.booking_date + timedelta(hours=7)).strftime("%H:%M, %d/%m/%Y"),
+            'vn_time_format': (booking.session.start_time + timedelta(hours=7)).strftime("%H:%M, %d/%m/%Y"),
+        }
+        
+        # Tạo nội dung email (HTML)
+        html_content = render_to_string('booking/email/booking_confirmation_email.html', context)
+        text_content = strip_tags(html_content)  # Phiên bản text của email
+        
+        # Tạo email
+        email = EmailMultiAlternatives(subject, text_content, from_email, [to_email])
+        email.attach_alternative(html_content, "text/html")
+        
+        # Gửi email
+        email.send()
+        logger.info(f"✅ Gửi email thành công đến {to_email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Chi tiết lỗi gửi email: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return False
 
 @login_required
 def my_tickets(request):
@@ -516,6 +545,7 @@ def my_tickets(request):
 
 @login_required
 def ticket_detail(request, booking_id):
+    from datetime import timedelta
     """Hiển thị chi tiết một vé"""
     booking = get_object_or_404(Booking, id=booking_id)
     
@@ -524,11 +554,22 @@ def ticket_detail(request, booking_id):
         messages.error(request, "Bạn không có quyền xem thông tin đặt vé này.")
         return redirect('booking:my_tickets')
     
-    return render(request, 'booking/ticket_detail.html', {
+    vn_booking_date = booking.booking_date + timedelta(hours=7) if booking.booking_date else None
+    vn_payment_date = booking.payment_date + timedelta(hours=7) if booking.payment_date else None
+    vn_session_start = booking.session.start_time + timedelta(hours=7) if booking.session else None
+    vn_session_end = booking.session.end_time + timedelta(hours=7) if booking.session else None
+    
+    context = {
         'booking': booking,
         'event': booking.event,
-        'session': booking.session
-    })
+        'session': booking.session,
+        'vn_booking_date': vn_booking_date,
+        'vn_payment_date': vn_payment_date,
+        'vn_session_start': vn_session_start,
+        'vn_session_end': vn_session_end,
+    }
+    
+    return render(request, 'booking/ticket_detail.html', context)
 
 @login_required
 def cancel_ticket(request, booking_id):
