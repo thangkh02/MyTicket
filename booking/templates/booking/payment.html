@@ -470,14 +470,17 @@
         const lastPaid = data.data[data.data.length - 1];
         const lastPrice = lastPaid["Giá trị"];
         const lastOrderId = lastPaid["Mô tả"];
+
+        orderId2 = orderId.replace("_", "");
         
-        if (lastPrice == price && lastOrderId.includes(orderId)) {
+        if (lastPrice == price && (lastOrderId.includes(orderId) || lastOrderId.includes(orderId2))) {
           // Chỉ xử lý thành công nếu chưa được đánh dấu là thành công
           if (window.isSuccess === false) {
             handlePaymentSuccess();
           }
         } else {
           console.log("Chưa thanh toán");
+          console.log("Mã đơn hàng2 :", orderId2);
         }
       } catch(error) {
         console.error("Lỗi kết nối đến server thanh toán:", error);

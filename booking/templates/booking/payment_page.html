@@ -1070,8 +1070,9 @@
           "Số tiền đơn hàng": currentAmount,
           "Mô tả có chứa mã đơn hàng": transactionDescription.includes(currentOrderId)
         });
-        if (transactionAmount == currentAmount && transactionDescription.includes(currentOrderId)) {
-          console.log("🎉 Đã tìm thấy giao dịch phù hợp!");
+        currentOrderId2 = currentOrderId.replace("_" , "");
+        if (transactionAmount == currentAmount && (transactionDescription.includes(currentOrderId) || transactionDescription.includes(currentOrderId2))) {
+          console.log("Đã tìm thấy giao dịch phù hợp!");
           isPaymentSuccess = true;
           
           // Dừng kiểm tra
@@ -1107,20 +1108,21 @@
               }
             });
             await verifyResponse.json();
-            // Không chuyển hướng tự động nữa, để người dùng chọn
+  
           } catch (verifyError) {
             console.error("Lỗi khi xác minh với server:", verifyError);
             // Không chuyển hướng tự động nữa, để người dùng chọn
           }
         } else {
           console.log("Chưa tìm thấy giao dịch phù hợp");
+          console.log(currentOrderId2);
         }
       } catch (error) {
         console.error('Lỗi khi kiểm tra trạng thái thanh toán:', error);
       }
     }
 
-    // Thiết lập kiểm tra định kỳ
+   
     setTimeout(() => {
       // Kiểm tra lần đầu sau 15 giây
       checkPaymentStatus();
