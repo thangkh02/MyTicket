@@ -80,19 +80,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-
-                            <div class="mb-3">
-                                <label for="{{ form.description_image.id_for_label }}" class="form-label">Ảnh mô tả sự kiện</label>
-                                {{ form.description_image }}
-                                {% if form.description_image.errors %}
-                                    <div class="text-danger mt-1">{{ form.description_image.errors }}</div>
-                                {% endif %}
-                                {% if form.instance.description_image %}
-                                    <div class="mt-2">
-                                        <img src="{{ form.instance.description_image.url }}" class="img-thumbnail" style="max-height: 150px">
-                                    </div>
-                                {% endif %}
-                            </div>
                         </div>
                     </div>
                     

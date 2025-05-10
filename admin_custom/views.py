@@ -125,7 +125,7 @@ def event_create(request):
     """
     EventForm = modelform_factory(Event, fields=[
         'title', 'description', 'category', 'location', 'image',
-        'organizer_name', 'organizer_description', 'organizer_logo', 'description_image'
+        'organizer_name', 'organizer_description', 'organizer_logo'
     ], widgets={
         'title': TextInput(attrs={'class': 'form-control'}),
         'description': Textarea(attrs={'class': 'form-control wysiwyg-editor', 'rows': 10}),
@@ -134,8 +134,7 @@ def event_create(request):
         'image': ClearableFileInput(attrs={'class': 'form-control'}),
         'organizer_name': TextInput(attrs={'class': 'form-control'}),
         'organizer_description': Textarea(attrs={'class': 'form-control wysiwyg-editor', 'rows': 5}),
-        'organizer_logo': ClearableFileInput(attrs={'class': 'form-control'}),
-        'description_image': ClearableFileInput(attrs={'class': 'form-control'})
+        'organizer_logo': ClearableFileInput(attrs={'class': 'form-control'})
     })
     
     if request.method == 'POST':
@@ -162,7 +161,7 @@ def event_edit(request, event_id):
     
     EventForm = modelform_factory(Event, fields=[
         'title', 'description', 'category', 'location', 'image',
-        'organizer_name', 'organizer_description', 'organizer_logo', 'description_image'
+        'organizer_name', 'organizer_description', 'organizer_logo'
     ], widgets={
         'title': TextInput(attrs={'class': 'form-control'}),
         'description': Textarea(attrs={'class': 'form-control wysiwyg-editor', 'rows': 10}),
@@ -171,8 +170,7 @@ def event_edit(request, event_id):
         'image': ClearableFileInput(attrs={'class': 'form-control'}),
         'organizer_name': TextInput(attrs={'class': 'form-control'}),
         'organizer_description': Textarea(attrs={'class': 'form-control wysiwyg-editor', 'rows': 5}),
-        'organizer_logo': ClearableFileInput(attrs={'class': 'form-control'}),
-        'description_image': ClearableFileInput(attrs={'class': 'form-control'})
+        'organizer_logo': ClearableFileInput(attrs={'class': 'form-control'})
     })
     
     if request.method == 'POST':
