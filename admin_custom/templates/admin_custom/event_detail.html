@@ -1,0 +1,263 @@
+{% extends 'admin_custom/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ event.title }} - MyTicket Admin{% endblock %}
+
+{% block page_title %}Chi tiết sự kiện{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Nút quay lại và chỉnh sửa -->
+    <div class="d-flex justify-content-between mb-4">        <a href="{% url 'admin_custom:event_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+        <div>
+            <a href="{% url 'admin_custom:event_edit' event.id %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+            </a>
+            <a href="#" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="bi bi-trash me-1"></i> Xóa
+            </a>
+        </div>
+    </div>
+    
+    <!-- Thông tin chung -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i> Thông tin sự kiện
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {% if event.image %}
+                                <img src="{{ event.image.url }}" class="img-fluid rounded" alt="{{ event.title }}">
+                            {% else %}
+                                <div class="bg-light text-center p-4 rounded">
+                                    <i class="bi bi-image display-4 text-muted"></i>
+                                    <p class="text-muted mt-3">Không có hình ảnh</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h3 class="mb-3">{{ event.title }}</h3>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-geo-alt me-2"></i> Địa điểm:</strong>
+                                <span class="ms-2">{{ event.location }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-person me-2"></i> Tổ chức bởi:</strong>
+                                <span class="ms-2">{{ event.organizer_name }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-telephone me-2"></i> Liên hệ:</strong>
+                                <span class="ms-2">{{ event.contact_phone }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-calendar-check me-2"></i> Ngày tạo:</strong>
+                                <span class="ms-2">{{ event.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+                    </div>                    <div class="mt-4">
+                        <h5>Mô tả:</h5>
+                        <div class="event-description p-3 bg-white rounded border">{{ event.description|safe }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i> Thống kê
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 text-center">
+                        <h1 class="display-5 fw-bold text-primary mb-0">{{ ticket_sold }}</h1>
+                        <p class="text-muted">Vé đã bán</p>
+                    </div>
+                    
+                    <div class="mb-3 text-center">
+                        <h1 class="display-5 fw-bold text-success mb-0">{{ revenue|floatformat:0|intcomma }}đ</h1>
+                        <p class="text-muted">Doanh thu</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Tổng số buổi:</span>
+                        <span class="badge bg-primary rounded-pill">{{ sessions.count }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Loại vé:</span>
+                        <span class="badge bg-info rounded-pill">{{ event.tickettype_set.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Các buổi diễn -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">                <h5 class="mb-0">
+                    <i class="bi bi-calendar-week me-2"></i> Lịch diễn
+                </h5>
+                <a href="{% url 'admin_custom:session_create' event.id %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Thêm buổi diễn
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên buổi diễn</th>
+                            <th>Bắt đầu</th>
+                            <th>Kết thúc</th>
+                            <th>Số lượng vé</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>{{ session.id }}</td>
+                            <td>{{ session.name }}</td>
+                            <td>{{ session.start_time|date:"d/m/Y H:i" }}</td>
+                            <td>{{ session.end_time|date:"d/m/Y H:i" }}</td>
+                            <td>                                {% with ticket_types=session.ticket_types.all %}
+                                    {% if ticket_types %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for ticket_type in ticket_types %}
+                                                <li>
+                                                    {{ ticket_type.name }}: {{ ticket_type.price|floatformat:0|intcomma }}đ
+                                                    <a href="{% url 'admin_custom:ticket_type_edit' ticket_type.id %}" class="btn btn-sm btn-link p-0 ms-1">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-muted">Chưa có loại vé</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_custom:session_edit' session.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'admin_custom:ticket_type_create' session.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-plus-circle"></i> Thêm vé
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-calendar-x display-4 d-block mb-3 text-muted"></i>
+                                <p class="text-muted">Chưa có buổi diễn nào được thêm vào</p>
+                                <a href="{% url 'admin_custom:session_create' event.id %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-1"></i> Thêm buổi diễn đầu tiên
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Đơn đặt vé -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-receipt me-2"></i> Đơn đặt vé cho sự kiện này
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in booking_items %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admin_custom:booking_detail' item.booking.id %}" class="text-decoration-none">
+                                    #{{ item.booking.id }}
+                                </a>
+                            </td>                            <td>{{ item.booking.name }}</td>
+                            <td>{{ item.booking.email }}</td>
+                            <td>{{ item.booking.phone }}</td>
+                            <td>{{ item.price|floatformat:0|intcomma }}đ</td>
+                            <td>{{ item.booking.booking_date|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if item.booking.payment_status == 'Paid' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                {% elif item.booking.payment_status == 'Pending' %}
+                                    <span class="badge bg-warning">Đang xử lý</span>
+                                {% elif item.booking.payment_status == 'Cancelled' %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ item.booking.payment_status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-receipt-cutoff display-4 d-block mb-3 text-muted"></i>
+                                <p class="text-muted">Chưa có đơn đặt vé nào cho sự kiện này</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>    </div>
+</div>
+
+<!-- Modal xác nhận xóa sự kiện -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa sự kiện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa sự kiện "<strong>{{ event.title }}</strong>"?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Lưu ý: Hành động này không thể hoàn tác và sẽ xóa tất cả các buổi diễn, loại vé và đơn đặt vé liên quan.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{% url 'admin_custom:event_delete' event.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

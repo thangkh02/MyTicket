@@ -19,6 +19,12 @@ class Event(models.Model):
     location = models.CharField(max_length=200, verbose_name="Địa điểm")
     image = models.ImageField(upload_to='events/', blank=True, null=True, verbose_name="Ảnh sự kiện")
     
+    # Thông tin nhà tổ chức
+    organizer_name = models.CharField(max_length=200, blank=True, null=True, verbose_name="Tên nhà tổ chức")
+    organizer_description = models.TextField(blank=True, null=True, verbose_name="Mô tả nhà tổ chức")
+    organizer_logo = models.ImageField(upload_to='organizers/', blank=True, null=True, verbose_name="Logo nhà tổ chức")
+    description_image = models.ImageField(upload_to='events/', blank=True, null=True, verbose_name="Ảnh mô tả sự kiện")
+    
     def __str__(self):
         return self.title
         

@@ -1,0 +1,122 @@
+{% extends 'admin_custom/base.html' %}
+
+{% block title %}Danh sách sự kiện - MyTicket Admin{% endblock %}
+
+{% block page_title %}Danh sách sự kiện{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-calendar-event me-2"></i> Quản lý sự kiện
+            </div>            <div>
+                <a href="{% url 'admin_custom:event_create' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Thêm sự kiện mới
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Tìm kiếm -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <input type="text" class="form-control me-2" name="search" placeholder="Tìm kiếm sự kiện..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        {% if search_query %}
+                            <a href="{% url 'admin_custom:event_list' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Danh sách sự kiện -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên sự kiện</th>
+                            <th>Địa điểm</th>
+                            <th>Thời gian</th>
+                            <th>Số vé bán</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td>{{ event.id }}</td>
+                            <td>
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" alt="{{ event.title }}" width="60" height="40" class="img-thumbnail">
+                                {% else %}
+                                    <div class="bg-light text-center" style="width: 60px; height: 40px;">
+                                        <i class="bi bi-image text-muted" style="line-height: 40px;"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_custom:event_detail' event.id %}" class="text-decoration-none fw-bold">
+                                    {{ event.title }}
+                                </a>
+                            </td>
+                            <td>{{ event.location }}</td>
+                            <td>
+                                {% if event.sessions.all %}
+                                    {{ event.sessions.first.start_time|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Chưa có lịch</span>
+                                {% endif %}
+                            </td>                            <td>
+                                {% with ticket_count=event.sessions.all|length %}
+                                    {{ ticket_count }} buổi diễn
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% now "Y-m-d" as today %}
+                                {% if event.sessions.first.start_time.date|date:"Y-m-d" > today %}
+                                    <span class="badge bg-success">Sắp diễn ra</span>
+                                {% elif event.sessions.first.end_time.date|date:"Y-m-d" < today %}
+                                    <span class="badge bg-secondary">Đã kết thúc</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Đang diễn ra</span>
+                                {% endif %}
+                            </td>                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_custom:event_detail' event.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_custom:event_edit' event.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-calendar-x display-4 d-block mb-3 text-muted"></i>
+                                <p class="text-muted">Không tìm thấy sự kiện nào</p>
+                                {% if search_query %}
+                                    <a href="{% url 'admin_custom:event_list' %}" class="btn btn-outline-primary mt-2">
+                                        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

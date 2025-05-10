@@ -1,0 +1,189 @@
+{% extends 'admin_custom/base.html' %}
+{% load humanize %}
+
+{% block title %}Chi tiết đơn #{{ booking.id }} - MyTicket Admin{% endblock %}
+
+{% block page_title %}Chi tiết đơn đặt vé{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Nút quay lại -->
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{% url 'admin_custom:booking_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+        <div>
+            <form method="post" class="d-inline">
+                {% csrf_token %}                {% if booking.payment_status != 'Paid' %}
+                    <button type="submit" name="action" value="complete" class="btn btn-success me-2">
+                        <i class="bi bi-check-circle me-1"></i> Đánh dấu hoàn thành
+                    </button>
+                {% endif %}
+                
+                {% if booking.payment_status != 'Cancelled' %}
+                    <button type="submit" name="action" value="cancel" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                    </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    <!-- Thông tin đơn hàng -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i> Thông tin đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Mã đơn hàng:</strong> #{{ booking.id }}</p>
+                            <p class="mb-2"><strong>Ngày đặt:</strong> {{ booking.booking_date|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-2">
+                                <strong>Trạng thái:</strong>
+                                {% if booking.payment_status == 'Paid' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                {% elif booking.payment_status == 'Pending' %}
+                                    <span class="badge bg-warning">Đang xử lý</span>
+                                {% elif booking.payment_status == 'Cancelled' %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ booking.payment_status }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Tổng tiền:</strong> {{ booking.total_price|floatformat:0|intcomma }}đ</p>
+                            <p class="mb-2"><strong>Phương thức thanh toán:</strong> {{ booking.payment_method|default:"Chưa xác định" }}</p>
+                            <p class="mb-2"><strong>Mã giao dịch:</strong> {{ booking.transaction_id|default:"Chưa có" }}</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3">Thông tin khách hàng</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Tên khách hàng:</strong> {{ booking.customer_name }}</p>
+                            <p class="mb-2"><strong>Email:</strong> {{ booking.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Số điện thoại:</strong> {{ booking.phone }}</p>
+                            <p class="mb-2"><strong>Địa chỉ:</strong> {{ booking.address|default:"Không có" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-ticket-perforated me-2"></i> Chi tiết vé đặt
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sự kiện</th>
+                                    <th>Buổi diễn</th>
+                                    <th>Loại vé</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in booking_items %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'admin_custom:event_detail' item.ticket_type.session.event.id %}" class="text-decoration-none">
+                                            {{ item.ticket_type.session.event.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ item.ticket_type.session.name }}</td>
+                                    <td>{{ item.ticket_type.name }}</td>
+                                    <td>{{ item.quantity }}</td>                                    <td>{{ item.unit_price|floatformat:0|intcomma }}đ</td>
+                                    <td>{{ item.subtotal|floatformat:0|intcomma }}đ</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>                                    <td colspan="5" class="text-end"><strong>Tổng tiền:</strong></td>
+                                    <td><strong>{{ booking.total_price|floatformat:0|intcomma }}đ</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Ghi chú đơn hàng -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journal-text me-2"></i> Ghi chú đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if booking.note %}
+                        <p>{{ booking.note }}</p>
+                    {% else %}
+                        <p class="text-muted">Không có ghi chú</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Lịch sử đơn hàng -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i> Lịch sử đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-info">Đã tạo</span>
+                                    <span>Đơn hàng được tạo</span>
+                                </div>
+                                <small class="text-muted">{{ booking.booking_date|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </li>
+                        
+                        {% if booking.payment_status == 'Paid' %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                    <span>Đơn hàng hoàn thành</span>
+                                </div>
+                                <small class="text-muted">{{ booking.updated_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if booking.payment_status == 'Cancelled' %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                    <span>Đơn hàng bị hủy</span>
+                                </div>
+                                <small class="text-muted">{{ booking.updated_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

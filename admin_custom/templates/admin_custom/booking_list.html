@@ -1,0 +1,101 @@
+{% extends 'admin_custom/base.html' %}
+{% load humanize %}
+
+{% block title %}Danh sách đơn đặt vé - MyTicket Admin{% endblock %}
+
+{% block page_title %}Danh sách đơn đặt vé{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-receipt me-2"></i> Quản lý đơn đặt vé
+        </div>
+        
+        <div class="card-body">
+            <!-- Bộ lọc -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <div class="input-group">                            <select class="form-select" name="status" onchange="this.form.submit()">
+                                <option value="" {% if not current_status %}selected{% endif %}>Tất cả trạng thái</option>
+                                <option value="Pending" {% if current_status == 'Pending' %}selected{% endif %}>Đang xử lý</option>
+                                <option value="Paid" {% if current_status == 'Paid' %}selected{% endif %}>Hoàn thành</option>
+                                <option value="Failed" {% if current_status == 'Failed' %}selected{% endif %}>Thất bại</option>
+                                <option value="Cancelled" {% if current_status == 'Cancelled' %}selected{% endif %}>Đã hủy</option>
+                            </select>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-filter"></i>
+                            </button>
+                            {% if current_status %}
+                                <a href="{% url 'admin_custom:booking_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Danh sách đơn đặt vé -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>                            <td>{{ booking.name }}</td>
+                            <td>{{ booking.email }}</td>
+                            <td>{{ booking.phone }}</td>
+                            <td>{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                            <td>{{ booking.booking_date|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if booking.payment_status == 'Paid' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                {% elif booking.payment_status == 'Pending' %}
+                                    <span class="badge bg-warning">Đang xử lý</span>
+                                {% elif booking.payment_status == 'Cancelled' %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ booking.payment_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_custom:booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-receipt-cutoff display-4 d-block mb-3 text-muted"></i>
+                                <p class="text-muted">Không tìm thấy đơn đặt vé nào</p>
+                                {% if current_status %}
+                                    <a href="{% url 'admin_custom:booking_list' %}" class="btn btn-outline-primary mt-2">
+                                        <i class="bi bi-arrow-left me-1"></i> Hiển thị tất cả đơn hàng
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -144,7 +144,7 @@
   }
 
   .content-collapsed {
-    max-height: 180px;
+    max-height: 400px;
     overflow: hidden;
     position: relative;
   }
@@ -165,6 +165,28 @@
     color: #333; /* Màu chữ đậm */
     font-size: 16px;
     line-height: 1.6;
+  }
+  
+  /* Đảm bảo tất cả các ảnh trong nội dung mô tả sự kiện không bị tràn ra khỏi container */
+  #eventDescription img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+  }
+  
+  /* Đảm bảo các bảng và nội dung khác không bị tràn container */
+  #eventDescription table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  /* Đảm bảo iframe, video được responsive */
+  #eventDescription iframe,
+  #eventDescription video {
+    max-width: 100%;
+    height: auto;
   }
 
   .content-toggle {
@@ -236,6 +258,14 @@
     color: #666;
     font-size: 15px;
     line-height: 1.6;
+  }
+  
+  /* Đảm bảo hình ảnh trong mô tả ban tổ chức không bị tràn container */
+  .organizer-description img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
   }
 
   /* Session/Ticket section - Màu trắng sáng như trong hình */
@@ -549,6 +579,7 @@
 </div>
 
 
+
 <div class="content-wrapper">
     <div class="container">
         <div class="row">
@@ -559,7 +590,7 @@
                     <h2 class="section-title">Giới thiệu về sự kiện</h2>
                     <div class="event-description-wrapper">
                         <div id="eventDescription" class="content-collapsed">
-                            {{ event.description|linebreaks }}
+                            {{ event.description|safe }}
                         </div>
                         <div id="contentToggle" class="content-toggle" onclick="toggleContent()">
                             <span>Xem thêm</span>
@@ -567,7 +598,6 @@
                         </div>
                     </div>
                 </div>
-
                 {% if event.organizer_name %}
                 <div class="content-section">
                     <h4 class="section-title">Ban tổ chức sự kiện</h4>
@@ -582,10 +612,9 @@
                         <div class="organizer-details">
                             <div class="organizer-name">{{ event.organizer_name }}</div>
                             {% if event.organizer_description %}
-                            <div class="organizer-description">{{ event.organizer_description }}</div>
+                            <div class="organizer-description">{{ event.organizer_description|safe }}</div>
                             {% endif %}
                             <div class="organizer-contact">
-        
                             </div>
                         </div>
                     </div>
@@ -619,6 +648,7 @@
                                 {% endwith %}
                             </div>
                         </div>
+                        
                         <div class="ticket-types">
                             {% for ticket in session.ticket_types.all %}
                             <div class="ticket-type-item">
@@ -713,15 +743,20 @@ function toggleContent() {
     const eventDescription = document.getElementById('eventDescription');
     const contentToggle = document.getElementById('contentToggle');
     const toggleText = contentToggle.querySelector('span');
+    const icon = contentToggle.querySelector('i');
     
     if (eventDescription.classList.contains('content-collapsed')) {
         eventDescription.classList.remove('content-collapsed');
         contentToggle.classList.add('expanded');
         toggleText.textContent = 'Thu gọn';
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-up');
     } else {
         eventDescription.classList.add('content-collapsed');
         contentToggle.classList.remove('expanded');
         toggleText.textContent = 'Xem thêm';
+        icon.classList.remove('bi-chevron-up');
+        icon.classList.add('bi-chevron-down');
     }
 }
 

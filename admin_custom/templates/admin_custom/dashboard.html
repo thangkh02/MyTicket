@@ -1,0 +1,140 @@
+{% extends 'admin_custom/base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard - MyTicket Admin{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div class="stat-value">{{ total_events }}</div>
+                <div class="stat-label">Sự kiện</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div class="stat-value">{{ total_bookings }}</div>
+                <div class="stat-label">Đơn đặt vé</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div class="stat-value">{{ total_revenue|floatformat:0|intcomma }}đ</div>
+                <div class="stat-label">Doanh thu</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Đơn đặt vé gần đây -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-receipt me-2"></i> Đơn đặt vé gần đây
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Ngày đặt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'admin_custom:booking_detail' booking.id %}" class="text-decoration-none">
+                                            #{{ booking.id }}
+                                        </a>
+                                    </td>                                    <td>{{ booking.name }}</td>
+                                    <td>
+                                        {% if booking.payment_status == 'Paid' %}
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                        {% elif booking.payment_status == 'Pending' %}
+                                            <span class="badge bg-warning">Đang xử lý</span>
+                                        {% elif booking.payment_status == 'Cancelled' %}
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ booking.payment_status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ booking.total_price|floatformat:0|intcomma }}đ</td>
+                                    <td>{{ booking.booking_date|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">Không có đơn đặt vé nào</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'admin_custom:booking_list' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sự kiện sắp diễn ra -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-calendar-event me-2"></i> Sự kiện sắp diễn ra
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tên sự kiện</th>
+                                    <th>Địa điểm</th>
+                                    <th>Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in upcoming_events %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'admin_custom:event_detail' event.id %}" class="text-decoration-none">
+                                            {{ event.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ event.location }}</td>
+                                    <td>{{ event.sessions.first.start_time|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3">Không có sự kiện nào sắp diễn ra</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'admin_custom:event_list' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

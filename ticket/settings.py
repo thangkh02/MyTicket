@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'booking',
+    'admin_custom',  # Thêm ứng dụng admin_custom
     'django.contrib.humanize',
     'django_recaptcha'  # Thay captcha bằng django_recaptcha
 ]

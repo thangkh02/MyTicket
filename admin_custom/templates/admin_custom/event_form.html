@@ -1,0 +1,194 @@
+{% extends 'admin_custom/base.html' %}
+
+{% block title %}{{ title }} - MyTicket Admin{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-event me-2"></i> {{ title }}
+            </h5>
+            {% if event %}
+            <a href="{% url 'admin_custom:event_detail' event.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+            {% else %}
+            <a href="{% url 'admin_custom:event_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-lg-8">
+                        <!-- Thông tin chính -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Thông tin cơ bản</h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Tên sự kiện *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger mt-1">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Mô tả *</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.category.id_for_label }}" class="form-label">Thể loại *</label>
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                            <div class="text-danger mt-1">{{ form.category.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.location.id_for_label }}" class="form-label">Địa điểm *</label>
+                                        {{ form.location }}
+                                        {% if form.location.errors %}
+                                            <div class="text-danger mt-1">{{ form.location.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.image.id_for_label }}" class="form-label">Ảnh bìa sự kiện</label>
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="text-danger mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                                {% if form.instance.image %}
+                                    <div class="mt-2">
+                                        <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-height: 150px">
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.description_image.id_for_label }}" class="form-label">Ảnh mô tả sự kiện</label>
+                                {{ form.description_image }}
+                                {% if form.description_image.errors %}
+                                    <div class="text-danger mt-1">{{ form.description_image.errors }}</div>
+                                {% endif %}
+                                {% if form.instance.description_image %}
+                                    <div class="mt-2">
+                                        <img src="{{ form.instance.description_image.url }}" class="img-thumbnail" style="max-height: 150px">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <!-- Thông tin nhà tổ chức -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Thông tin nhà tổ chức</h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.organizer_name.id_for_label }}" class="form-label">Tên nhà tổ chức</label>
+                                {{ form.organizer_name }}
+                                {% if form.organizer_name.errors %}
+                                    <div class="text-danger mt-1">{{ form.organizer_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.organizer_description.id_for_label }}" class="form-label">Mô tả nhà tổ chức</label>
+                                {{ form.organizer_description }}
+                                {% if form.organizer_description.errors %}
+                                    <div class="text-danger mt-1">{{ form.organizer_description.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.organizer_logo.id_for_label }}" class="form-label">Logo nhà tổ chức</label>
+                                {{ form.organizer_logo }}
+                                {% if form.organizer_logo.errors %}
+                                    <div class="text-danger mt-1">{{ form.organizer_logo.errors }}</div>
+                                {% endif %}
+                                {% if form.instance.organizer_logo %}
+                                    <div class="mt-2">
+                                        <img src="{{ form.instance.organizer_logo.url }}" class="img-thumbnail" style="max-height: 100px">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Lưu sự kiện
+                    </button>                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    tinymce.init({
+        selector: '.wysiwyg-editor',
+        height: 400,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'
+        ],
+        toolbar: 'undo redo | formatselect | ' +
+            'bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'link image media emoticons | removeformat | help',        menubar: 'file edit view insert format tools table help',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+        language: 'vi',
+        branding: false,
+        promotion: false,
+        images_upload_url: '/admin-custom/upload-image/',
+        automatic_uploads: true,
+        file_picker_types: 'image',
+        file_picker_callback: function(callback, value, meta) {
+            // Hiển thị file picker cho phép người dùng chọn ảnh từ máy tính
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            
+            input.onchange = function() {
+                var file = this.files[0];
+                var reader = new FileReader();
+                
+                reader.onload = function() {
+                    var id = 'blobid' + (new Date()).getTime();
+                    var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    var base64 = reader.result.split(',')[1];
+                    var blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    
+                    callback(blobInfo.blobUri(), { title: file.name });
+                };
+                
+                reader.readAsDataURL(file);
+            };
+            
+            input.click();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

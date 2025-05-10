@@ -1,0 +1,337 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MyTicket Admin{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/6p8scxzz423lb2jqncl17ng5wdx825kqs6p97wg53oan6zsm/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+      <style>
+        :root {
+            --primary-color: #2dc275;
+            --primary-hover: #239a5f;
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        
+        body {
+            font-family: 'Inter', 'Nunito', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        /* Định dạng nội dung từ WYSIWYG editor */
+        .event-description h1, .event-description h2, .event-description h3, 
+        .event-description h4, .event-description h5, .event-description h6 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .event-description img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
+        }
+        
+        .event-description ul, .event-description ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .event-description table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        .event-description table th, .event-description table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background-color: #212529;
+            color: #fff;
+            padding: 20px 0;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-brand {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-menu {
+            padding: 0;
+            list-style: none;
+            margin-top: 30px;
+        }
+        
+        .sidebar-menu li {
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li a {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .sidebar-menu li a:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-menu li a.active {
+            color: #fff;
+            background-color: var(--primary-color);
+        }
+        
+        .sidebar-menu li a i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .header {
+            background-color: #fff;
+            height: var(--header-height);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .user-dropdown {
+            position: relative;
+        }
+        
+        .user-dropdown > a {
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .stat-card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+            height: 100%;
+            text-align: center;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 40px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+        }
+        
+        .badge-success {
+            background-color: #2dc275;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{% url 'admin_custom:dashboard' %}" class="sidebar-brand">
+                <i class="bi bi-ticket-perforated"></i>
+                <span>MyTicket</span>
+            </a>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'admin_custom:dashboard' %}" class="{% if request.path == '/admin-custom/' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_custom:event_list' %}" class="{% if '/admin-custom/events/' in request.path %}active{% endif %}">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>Sự kiện</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_custom:booking_list' %}" class="{% if '/admin-custom/bookings/' in request.path %}active{% endif %}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Đơn đặt vé</span>
+                </a>
+            </li>
+            <li>
+                <a href="/admin/">
+                    <i class="bi bi-gear"></i>
+                    <span>Admin Django</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_custom:logout' %}">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="user-dropdown">
+                <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i>
+                    <span>{{ request.user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'admin_custom:logout' %}">Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
